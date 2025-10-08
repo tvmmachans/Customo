@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Customo RoBo Design System - Futuristic Robotics Theme
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Core Colors - Dark Tech Theme */
+    --background: 220 20% 8%;
+    --foreground: 210 20% 98%;
+
+    --card: 220 20% 12%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 220 20% 10%;
+    --popover-foreground: 210 20% 95%;
+
+    /* Electric Blue Primary */
+    --primary: 200 100% 50%;
+    --primary-foreground: 220 20% 8%;
+    --primary-glow: 200 100% 60%;
+
+    /* Secondary Tech Gray */
+    --secondary: 220 15% 20%;
+    --secondary-foreground: 210 20% 90%;
+
+    /* Muted Elements */
+    --muted: 220 15% 15%;
+    --muted-foreground: 215 15% 65%;
+
+    /* Cyan Accent */
+    --accent: 180 100% 45%;
+    --accent-foreground: 220 20% 8%;
+
+    /* Orange CTA */
+    --cta: 25 95% 55%;
+    --cta-foreground: 220 20% 8%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 15% 20%;
+    --input: 220 15% 18%;
+    --ring: 200 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--background)), hsl(var(--muted)));
+
+    /* Shadows & Effects */
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.3);
+    --shadow-card: 0 10px 30px -10px hsl(var(--background) / 0.3);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Sidebar colors remain the same for now */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Keep dark theme same as light for this tech aesthetic */
+    --background: 220 20% 8%;
+    --foreground: 210 20% 98%;
+    --card: 220 20% 12%;
+    --card-foreground: 210 20% 95%;
+    --popover: 220 20% 10%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 200 100% 50%;
+    --primary-foreground: 220 20% 8%;
+    --primary-glow: 200 100% 60%;
+    --secondary: 220 15% 20%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 220 15% 15%;
+    --muted-foreground: 215 15% 65%;
+    --accent: 180 100% 45%;
+    --accent-foreground: 220 20% 8%;
+    --cta: 25 95% 55%;
+    --cta-foreground: 220 20% 8%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 15% 20%;
+    --input: 220 15% 18%;
+    --ring: 200 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border transition-[var(--transition-smooth)];
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom glassmorphism utility */
+  .glass {
+    @apply bg-background/80 backdrop-blur-md border border-border/50;
+  }
+
+  /* Glow effect utilities */
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px hsl(var(--accent) / 0.3);
+  }
+}
