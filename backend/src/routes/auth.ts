@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+// Use CommonJS helper for JWT to centralize secret handling and types
+const { signToken, verifyToken } = require('../utils/jwt');
 import { PrismaClient } from '@prisma/client';
 import { body, validationResult } from 'express-validator';
 import { AuthRequest } from '../middleware/auth';
@@ -70,20 +71,14 @@ router.post('/register', [
     });
 
     // Generate JWT token
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      res.status(500).json({
-        success: false,
-        message: 'Server configuration error'
-      });
+    // Generate JWT token
+    let token: string;
+    try {
+      token = signToken({ userId: user.id, email: user.email });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Server configuration error' });
       return;
     }
-    
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      jwtSecret as jwt.Secret,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
-    );
 
     res.status(201).json({
       success: true,
@@ -144,20 +139,13 @@ router.post('/login', [
     }
 
     // Generate JWT token
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      res.status(500).json({
-        success: false,
-        message: 'Server configuration error'
-      });
+    let token: string;
+    try {
+      token = signToken({ userId: user.id, email: user.email });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Server configuration error' });
       return;
     }
-    
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      jwtSecret as jwt.Secret,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
-    );
 
     res.json({
       success: true,
@@ -198,16 +186,13 @@ router.get('/me', async (req: AuthRequest, res: Response): Promise<void> => {
       return;
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      res.status(500).json({
-        success: false,
-        message: 'Server configuration error'
-      });
+    let decoded: any;
+    try {
+      decoded = verifyToken(token) as any;
+    } catch (err) {
+      res.status(401).json({ success: false, message: 'Invalid token' });
       return;
     }
-
-    const decoded = jwt.verify(token, jwtSecret) as any;
     
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -264,16 +249,13 @@ router.put('/profile', [
       return;
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      res.status(500).json({
-        success: false,
-        message: 'Server configuration error'
-      });
+    let decoded: any;
+    try {
+      decoded = verifyToken(token) as any;
+    } catch (err) {
+      res.status(401).json({ success: false, message: 'Invalid token' });
       return;
     }
-
-    const decoded = jwt.verify(token, jwtSecret) as any;
     const { firstName, lastName, phone, company } = req.body;
 
     const user = await prisma.user.update({
@@ -336,16 +318,13 @@ router.put('/change-password', [
       return;
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      res.status(500).json({
-        success: false,
-        message: 'Server configuration error'
-      });
+    let decoded: any;
+    try {
+      decoded = verifyToken(token) as any;
+    } catch (err) {
+      res.status(401).json({ success: false, message: 'Invalid token' });
       return;
     }
-
-    const decoded = jwt.verify(token, jwtSecret) as any;
     const { currentPassword, newPassword } = req.body;
 
     // Get user with password

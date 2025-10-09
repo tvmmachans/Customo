@@ -55,6 +55,7 @@ model Product {
   // Relations
   orderItems  OrderItem[]
   reviews     Review[]
+  devices     Device[]
   customBuildParts CustomBuildPart[]
 
   @@map("products")
