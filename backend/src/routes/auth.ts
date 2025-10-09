@@ -81,8 +81,8 @@ router.post('/register', [
     
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      jwtSecret,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      jwtSecret as jwt.Secret,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
     );
 
     res.status(201).json({
@@ -155,8 +155,8 @@ router.post('/login', [
     
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      jwtSecret,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      jwtSecret as jwt.Secret,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
     );
 
     res.json({
