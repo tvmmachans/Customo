@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 import Stripe from 'stripe';
 import { PrismaClient } from '@prisma/client';
 import { body, validationResult } from 'express-validator';
@@ -16,7 +16,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 router.post('/create-payment-intent', [
   body('orderId').isUUID(),
   body('amount').isFloat({ min: 0.01 })
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -69,7 +69,7 @@ router.post('/create-payment-intent', [
       currency: 'usd',
       metadata: {
         orderId,
-        userId
+        userId: userId ?? null
       },
       description: `Payment for order ${order.orderNumber}`,
       automatic_payment_methods: {
@@ -102,7 +102,7 @@ router.post('/create-payment-intent', [
 // Confirm payment
 router.post('/confirm-payment', [
   body('paymentIntentId').notEmpty().trim()
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -171,7 +171,7 @@ router.post('/create-order', [
   body('items.*.quantity').isInt({ min: 1 }),
   body('shippingAddress').isObject(),
   body('billingAddress').optional().isObject()
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -189,9 +189,9 @@ router.post('/create-order', [
     const orderCount = await prisma.order.count();
     const orderNumber = `ORD-${String(orderCount + 1).padStart(6, '0')}`;
 
-    // Calculate total amount
-    let totalAmount = 0;
-    const orderItems = [];
+  // Calculate total amount
+  let totalAmount = 0;
+  const orderItems: any[] = [];
 
     for (const item of items) {
       const product = await prisma.product.findUnique({
@@ -215,25 +215,19 @@ router.post('/create-order', [
       const itemTotal = Number(product.price) * item.quantity;
       totalAmount += itemTotal;
 
-      orderItems.push({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: Number(product.price)
-      });
+      orderItems.push({ productId: item.productId, quantity: item.quantity, price: Number(product.price) } as any);
     }
 
     // Create order
-    const order = await prisma.order.create({
-      data: {
-        orderNumber,
-        userId,
-        totalAmount,
-        shippingAddress,
-        billingAddress: billingAddress || shippingAddress,
-        status: 'PENDING',
-        paymentStatus: 'PENDING'
-      }
-    });
+    const order = await prisma.order.create({ data: {
+      orderNumber,
+      userId: userId as any,
+      totalAmount,
+      shippingAddress,
+      billingAddress: billingAddress || shippingAddress,
+      status: 'PENDING',
+      paymentStatus: 'PENDING'
+    } as any } as any);
 
     // Create order items
     await prisma.orderItem.createMany({
@@ -270,7 +264,7 @@ router.post('/create-order', [
 });
 
 // Get user orders
-router.get('/orders', async (req: AuthRequest, res) => {
+router.get('/orders', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     const { page = 1, limit = 20 } = req.query;
@@ -321,7 +315,7 @@ router.get('/orders', async (req: AuthRequest, res) => {
 });
 
 // Get single order
-router.get('/orders/:id', async (req: AuthRequest, res) => {
+router.get('/orders/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -428,7 +422,7 @@ router.post('/refund', [
   body('orderId').isUUID(),
   body('amount').optional().isFloat({ min: 0.01 }),
   body('reason').optional().trim()
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

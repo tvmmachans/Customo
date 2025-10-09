@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 // Create email transporter
 const createTransporter = () => {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: false, // true for 465, false for other ports
@@ -235,7 +235,7 @@ export const initializeEmailService = () => {
   
   // Test email configuration
   const transporter = createTransporter();
-  transporter.verify((error, success) => {
+  transporter.verify((error: Error | null, success?: boolean) => {
     if (error) {
       console.error('❌ Email service configuration error:', error);
     } else {

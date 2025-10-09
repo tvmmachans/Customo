@@ -61,6 +61,14 @@ const Navigation = () => {
             >
               Service
             </Link>
+            <Link
+              to="/buttons"
+              className={`text-foreground hover:text-primary transition-colors ${
+                location.pathname === "/buttons" ? "text-primary" : ""
+              }`}
+            >
+              UI
+            </Link>
             {isLoggedIn && (
               <Link
                 to="/your-devices"

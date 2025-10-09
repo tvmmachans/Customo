@@ -16,7 +16,7 @@ export const authMiddleware = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<Response | void> => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -61,7 +61,7 @@ export const authMiddleware = async (
       role: user.role
     };
 
-    next();
+    return next();
   } catch (error) {
     console.error('Auth middleware error:', error);
     return res.status(401).json({ 
@@ -75,26 +75,26 @@ export const adminMiddleware = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) => {
+): Response | void => {
   if (req.user?.role !== 'ADMIN') {
     return res.status(403).json({ 
       success: false, 
       message: 'Access denied. Admin role required.' 
     });
   }
-  next();
+  return next();
 };
 
 export const technicianMiddleware = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) => {
+): Response | void => {
   if (!['ADMIN', 'TECHNICIAN'].includes(req.user?.role || '')) {
     return res.status(403).json({ 
       success: false, 
       message: 'Access denied. Technician role required.' 
     });
   }
-  next();
+  return next();
 };

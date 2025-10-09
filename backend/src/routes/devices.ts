@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { body, query, validationResult } from 'express-validator';
 import { AuthRequest } from '../middleware/auth';
@@ -13,7 +13,7 @@ router.get('/', [
   query('status').optional().isIn(['ACTIVE', 'IDLE', 'MAINTENANCE', 'OFFLINE', 'ERROR']),
   query('type').optional().trim(),
   query('isOnline').optional().isBoolean()
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -91,7 +91,7 @@ router.get('/', [
 });
 
 // Get single device
-router.get('/:id', async (req: AuthRequest, res) => {
+router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -143,7 +143,7 @@ router.post('/', [
   body('type').notEmpty().trim(),
   body('location').optional().trim(),
   body('productId').optional().isUUID()
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -177,8 +177,8 @@ router.post('/', [
         type,
         location,
         productId,
-        userId
-      },
+        userId: userId as any
+      } as any,
       include: {
         product: {
           select: {
@@ -212,7 +212,7 @@ router.put('/:id', [
   body('status').optional().isIn(['ACTIVE', 'IDLE', 'MAINTENANCE', 'OFFLINE', 'ERROR']),
   body('battery').optional().isInt({ min: 0, max: 100 }),
   body('tasks').optional().trim()
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -272,7 +272,7 @@ router.put('/:id', [
 });
 
 // Delete device
-router.delete('/:id', async (req: AuthRequest, res) => {
+router.delete('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -310,7 +310,7 @@ router.delete('/:id', async (req: AuthRequest, res) => {
 router.post('/:id/control', [
   body('action').isIn(['start', 'stop', 'pause', 'reset', 'maintenance']),
   body('parameters').optional().isObject()
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -389,7 +389,7 @@ router.post('/:id/control', [
 });
 
 // Get device statistics
-router.get('/stats/overview', async (req: AuthRequest, res) => {
+router.get('/stats/overview', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
 
@@ -429,7 +429,7 @@ router.get('/stats/overview', async (req: AuthRequest, res) => {
 // Update device location
 router.put('/:id/location', [
   body('location').notEmpty().trim()
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

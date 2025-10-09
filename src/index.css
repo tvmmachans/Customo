@@ -119,4 +119,19 @@ All colors MUST be HSL.
   .glow-accent {
     box-shadow: 0 0 20px hsl(var(--accent) / 0.3);
   }
+
+  /* Motion utilities with prefers-reduced-motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .motion-safe-transition { transition: none !important; }
+    .motion-safe-transform { transform: none !important; }
+    .motion-safe-animate { animation: none !important; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .motion-safe-transition { transition: var(--transition-smooth); }
+    .motion-safe-transform { transition-property: transform; transition-duration: 180ms; transition-timing-function: cubic-bezier(.4,0,.2,1); }
+    .fade-in { opacity: 0; transform: translateY(6px); }
+    .fade-in.motion-safe { opacity: 1; transform: translateY(0); transition: opacity 220ms ease, transform 220ms ease; }
+    .scale-on-hover.motion-safe:hover { transform: scale(1.03); }
+  }
 }

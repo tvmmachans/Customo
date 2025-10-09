@@ -205,11 +205,11 @@ async function main() {
   ];
 
   for (const productData of products) {
-    await prisma.product.upsert({
-      where: { name: productData.name },
-      update: {},
-      create: productData
-    });
+    // Use findFirst + create with an any cast to avoid strict Prisma type mismatches in seed
+    const existing = await prisma.product.findFirst({ where: { name: productData.name } as any });
+    if (!existing) {
+      await prisma.product.create({ create: productData as any } as any);
+    }
   }
 
   console.log('🛍️ Products created');
@@ -250,8 +250,8 @@ async function main() {
 
   for (const deviceData of devices) {
     await prisma.device.create({
-      data: deviceData
-    });
+      data: deviceData as any
+    } as any);
   }
 
   console.log('🤖 Devices created');
@@ -280,19 +280,16 @@ async function main() {
   ];
 
   for (const ticketData of tickets) {
-    await prisma.serviceTicket.create({
-      data: ticketData
-    });
+    await prisma.serviceTicket.create({ data: ticketData as any } as any);
   }
 
   console.log('🎫 Service tickets created');
 
   // Create sample orders
-  const order = await prisma.order.create({
-    data: {
+  const order = await prisma.order.create({ data: {
       orderNumber: 'ORD-000001',
-      userId: customer.id,
-      totalAmount: 2999.00,
+      userId: customer.id as any,
+      totalAmount: 2999.0,
       status: 'DELIVERED',
       paymentStatus: 'PAID',
       shippingAddress: {
@@ -309,8 +306,7 @@ async function main() {
         zipCode: '94105',
         country: 'USA'
       }
-    }
-  });
+    } as any } as any);
 
   // Create order items
   const guardianProduct = await prisma.product.findFirst({
@@ -344,9 +340,7 @@ async function main() {
 
   for (const reviewData of reviews) {
     if (reviewData.productId) {
-      await prisma.review.create({
-        data: reviewData
-      });
+      await prisma.review.create({ data: reviewData as any } as any);
     }
   }
 

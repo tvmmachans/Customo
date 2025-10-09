@@ -234,19 +234,9 @@ const CustomBuild = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="flex items-center border rounded">
-                            <button
-                              onClick={() => handleQuantityChange(part.id, part.quantity - 1)}
-                              className="px-2 py-1 hover:bg-muted"
-                            >
-                              -
-                            </button>
+                            <Button size="sm" onClick={() => handleQuantityChange(part.id, part.quantity - 1)}>-</Button>
                             <span className="px-2 py-1 text-sm">{part.quantity}</span>
-                            <button
-                              onClick={() => handleQuantityChange(part.id, part.quantity + 1)}
-                              className="px-2 py-1 hover:bg-muted"
-                            >
-                              +
-                            </button>
+                            <Button size="sm" onClick={() => handleQuantityChange(part.id, part.quantity + 1)}>+</Button>
                           </div>
                           <Button
                             variant="ghost"

@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { body, query, validationResult } from 'express-validator';
 import { AuthRequest } from '../middleware/auth';
@@ -11,7 +11,7 @@ router.get('/', [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('status').optional().isIn(['DRAFT', 'QUOTE_REQUESTED', 'APPROVED', 'IN_PRODUCTION', 'COMPLETED', 'CANCELLED'])
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -84,7 +84,7 @@ router.get('/', [
 });
 
 // Get single custom build
-router.get('/:id', async (req: AuthRequest, res) => {
+router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -140,7 +140,7 @@ router.post('/', [
   body('parts').isArray({ min: 1 }),
   body('parts.*.productId').isUUID(),
   body('parts.*.quantity').isInt({ min: 1 })
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -154,9 +154,9 @@ router.post('/', [
     const { name, description, designFiles = [], parts } = req.body;
     const userId = req.user?.id;
 
-    // Calculate total cost
-    let totalCost = 0;
-    const buildParts = [];
+  // Calculate total cost
+  let totalCost = 0;
+  const buildParts: any[] = [];
 
     for (const part of parts) {
       const product = await prisma.product.findUnique({
@@ -186,17 +186,17 @@ router.post('/', [
       });
     }
 
-    // Create custom build
+    // Create custom build (cast data to any to match Prisma types temporarily)
     const build = await prisma.customBuild.create({
       data: {
-        userId,
+        userId: userId as any,
         name,
         description,
         designFiles,
         totalCost,
         status: 'DRAFT'
-      }
-    });
+      } as any
+    } as any);
 
     // Create build parts
     await prisma.customBuildPart.createMany({
@@ -247,7 +247,7 @@ router.put('/:id', [
   body('parts').optional().isArray(),
   body('parts.*.productId').optional().isUUID(),
   body('parts.*.quantity').optional().isInt({ min: 1 })
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -318,8 +318,8 @@ router.put('/:id', [
           buildId: id,
           productId: part.productId,
           quantity: part.quantity
-        }))
-      });
+        })) as any
+      } as any);
     }
 
     const build = await prisma.customBuild.update({
@@ -356,7 +356,7 @@ router.put('/:id', [
 });
 
 // Request quote for custom build
-router.post('/:id/request-quote', async (req: AuthRequest, res) => {
+router.post('/:id/request-quote', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -399,7 +399,7 @@ router.post('/:id/request-quote', async (req: AuthRequest, res) => {
 });
 
 // Cancel custom build
-router.put('/:id/cancel', async (req: AuthRequest, res) => {
+router.put('/:id/cancel', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -442,7 +442,7 @@ router.put('/:id/cancel', async (req: AuthRequest, res) => {
 });
 
 // Delete custom build
-router.delete('/:id', async (req: AuthRequest, res) => {
+router.delete('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;

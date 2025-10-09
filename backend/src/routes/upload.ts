@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { PrismaClient } from '@prisma/client';
@@ -45,7 +45,7 @@ const upload = multer({
 });
 
 // Upload single file
-router.post('/single', upload.single('file'), async (req: AuthRequest, res) => {
+router.post('/single', upload.single('file'), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -58,6 +58,7 @@ router.post('/single', upload.single('file'), async (req: AuthRequest, res) => {
     const { type = 'general' } = req.body;
 
     // Upload to Cloudinary
+    const fileBuffer = req.file!.buffer;
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
@@ -72,7 +73,7 @@ router.post('/single', upload.single('file'), async (req: AuthRequest, res) => {
           if (error) reject(error);
           else resolve(result);
         }
-      ).end(req.file.buffer);
+      ).end(fileBuffer);
     });
 
     res.json({
@@ -96,7 +97,7 @@ router.post('/single', upload.single('file'), async (req: AuthRequest, res) => {
 });
 
 // Upload multiple files
-router.post('/multiple', upload.array('files', 10), async (req: AuthRequest, res) => {
+router.post('/multiple', upload.array('files', 10), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
       return res.status(400).json({
@@ -123,8 +124,8 @@ router.post('/multiple', upload.array('files', 10), async (req: AuthRequest, res
           (error, result) => {
             if (error) reject(error);
             else resolve({
-              url: result.secure_url,
-              publicId: result.public_id,
+              url: (result as any).secure_url,
+              publicId: (result as any).public_id,
               originalName: file.originalname,
               size: file.size,
               type: file.mimetype
@@ -151,7 +152,7 @@ router.post('/multiple', upload.array('files', 10), async (req: AuthRequest, res
 });
 
 // Upload design files for custom builds
-router.post('/design', upload.array('files', 5), async (req: AuthRequest, res) => {
+router.post('/design', upload.array('files', 5), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
       return res.status(400).json({
@@ -175,8 +176,8 @@ router.post('/design', upload.array('files', 5), async (req: AuthRequest, res) =
           (error, result) => {
             if (error) reject(error);
             else resolve({
-              url: result.secure_url,
-              publicId: result.public_id,
+              url: (result as any).secure_url,
+              publicId: (result as any).public_id,
               originalName: file.originalname,
               size: file.size,
               type: file.mimetype
@@ -203,7 +204,7 @@ router.post('/design', upload.array('files', 5), async (req: AuthRequest, res) =
 });
 
 // Delete file
-router.delete('/:publicId', async (req: AuthRequest, res) => {
+router.delete('/:publicId', async (req: AuthRequest, res: Response) => {
   try {
     const { publicId } = req.params;
     const userId = req.user?.id;
@@ -232,7 +233,7 @@ router.delete('/:publicId', async (req: AuthRequest, res) => {
 });
 
 // Get user's uploaded files
-router.get('/files', async (req: AuthRequest, res) => {
+router.get('/files', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     const { type, page = 1, limit = 20 } = req.query;
@@ -261,7 +262,7 @@ router.get('/files', async (req: AuthRequest, res) => {
 });
 
 // Get file info
-router.get('/info/:publicId', async (req: AuthRequest, res) => {
+router.get('/info/:publicId', async (req: AuthRequest, res: Response) => {
   try {
     const { publicId } = req.params;
 
@@ -289,7 +290,7 @@ router.get('/info/:publicId', async (req: AuthRequest, res) => {
 });
 
 // Generate signed upload URL for direct client uploads
-router.post('/signed-url', async (req: AuthRequest, res) => {
+router.post('/signed-url', async (req: AuthRequest, res: Response) => {
   try {
     const { type = 'general', filename, contentType } = req.body;
     const userId = req.user?.id;

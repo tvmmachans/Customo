@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { body, query, validationResult } from 'express-validator';
 import { AuthRequest } from '../middleware/auth';
@@ -13,7 +13,7 @@ router.get('/tickets', [
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('status').optional().isIn(['OPEN', 'IN_PROGRESS', 'SCHEDULED', 'COMPLETED', 'CANCELLED']),
   query('priority').optional().isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT'])
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -86,7 +86,7 @@ router.get('/tickets', [
 });
 
 // Get single service ticket
-router.get('/tickets/:id', async (req: AuthRequest, res) => {
+router.get('/tickets/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -137,7 +137,7 @@ router.post('/tickets', [
   body('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   body('deviceId').optional().isUUID(),
   body('scheduledDate').optional().isISO8601()
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -179,14 +179,14 @@ router.post('/tickets', [
     const ticket = await prisma.serviceTicket.create({
       data: {
         ticketNumber,
-        userId,
+        userId: userId as any,
         deviceId,
         title,
         description,
         issueType,
         priority,
         scheduledDate: scheduledDate ? new Date(scheduledDate) : null
-      },
+      } as any,
       include: {
         device: {
           select: {
@@ -218,7 +218,7 @@ router.put('/tickets/:id', [
   body('description').optional().trim(),
   body('priority').optional().isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   body('scheduledDate').optional().isISO8601()
-], async (req: AuthRequest, res) => {
+], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -287,7 +287,7 @@ router.put('/tickets/:id', [
 });
 
 // Cancel service ticket
-router.put('/tickets/:id/cancel', async (req: AuthRequest, res) => {
+router.put('/tickets/:id/cancel', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -337,7 +337,7 @@ router.get('/admin/tickets', [
   query('status').optional().isIn(['OPEN', 'IN_PROGRESS', 'SCHEDULED', 'COMPLETED', 'CANCELLED']),
   query('priority').optional().isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   query('assignedTo').optional().trim()
-], technicianMiddleware, async (req: AuthRequest, res) => {
+], technicianMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -426,7 +426,7 @@ router.get('/admin/tickets', [
 // Assign ticket to technician
 router.put('/admin/tickets/:id/assign', [
   body('assignedTo').notEmpty().trim()
-], technicianMiddleware, async (req: AuthRequest, res) => {
+], technicianMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -477,7 +477,7 @@ router.put('/admin/tickets/:id/assign', [
 router.put('/admin/tickets/:id/status', [
   body('status').isIn(['OPEN', 'IN_PROGRESS', 'SCHEDULED', 'COMPLETED', 'CANCELLED']),
   body('notes').optional().trim()
-], technicianMiddleware, async (req: AuthRequest, res) => {
+], technicianMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -517,7 +517,7 @@ router.put('/admin/tickets/:id/status', [
 });
 
 // Get service statistics
-router.get('/stats', async (req: AuthRequest, res) => {
+router.get('/stats', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
 

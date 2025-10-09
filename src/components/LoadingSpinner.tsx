@@ -24,10 +24,10 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 }) => {
   const spinner = (
     <div className={cn('flex items-center justify-center', className)}>
-      <div className="flex flex-col items-center space-y-2">
+      <div className="fade-in motion-safe flex flex-col items-center space-y-2 motion-safe-transition">
         <Loader2 className={cn('animate-spin text-primary', sizeClasses[size])} />
         {text && (
-          <p className="text-sm text-muted-foreground animate-pulse">{text}</p>
+          <p className="text-sm text-muted-foreground">{text}</p>
         )}
       </div>
     </div>
