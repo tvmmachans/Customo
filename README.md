@@ -119,6 +119,37 @@ A comprehensive robotics platform for custom robot building, device management, 
    npm run dev
    ```
 
+## 🎯 One-click start
+
+To make development easier we provide two "one-click" starters:
+
+- Windows PowerShell (opens two new PowerShell windows):
+
+```powershell
+npm run start:oneclick
+# or
+powershell -ExecutionPolicy Bypass -File ./scripts/start-all.ps1
+```
+
+- Cross-platform (runs both servers in a single terminal; works on macOS/Linux/Windows with Node):
+
+```bash
+npm run start:oneclick:cross
+# or
+node ./scripts/start-all.js
+```
+
+What these do:
+- Ensure root dependencies are installed (skips if node_modules exists).
+- Run `npx prisma generate` for the backend.
+- Start the backend and frontend dev servers.
+
+Troubleshooting:
+- If PowerShell blocks scripts, run with `-ExecutionPolicy Bypass` as shown above.
+- Make sure `JWT_SECRET` and `DATABASE_URL` are set in your `.env` files (copy from `env.example`).
+- If ports are in use, the backend or frontend may switch ports; check the logs in their terminals.
+
+
 ## 🚀 Quick Start
 
 ### Using Docker (Recommended)

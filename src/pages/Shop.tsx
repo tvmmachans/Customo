@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart, Filter } from "lucide-react";
@@ -171,7 +172,12 @@ const Shop = () => {
                       View Details
                     </Button>
                   </Link>
-                  <Button variant="cta" size="sm">
+                  <Button variant="cta" size="sm" onClick={() => {
+                    const existing = JSON.parse(localStorage.getItem('cart') || '[]');
+                    existing.push({ productId: product.id, name: product.name, price: product.price, quantity: 1 });
+                    localStorage.setItem('cart', JSON.stringify(existing));
+                    toast.success(`Added ${product.name} to cart`);
+                  }}>
                     <ShoppingCart className="h-4 w-4" />
                   </Button>
                 </div>

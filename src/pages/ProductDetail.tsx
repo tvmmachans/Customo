@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -66,11 +67,18 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
+    const existing = JSON.parse(localStorage.getItem('cart') || '[]');
+    existing.push({ productId: product.id, name: product.name, price: product.price, quantity });
+    localStorage.setItem('cart', JSON.stringify(existing));
     toast.success(`Added ${quantity}x ${product.name} to cart!`);
   };
 
   const handleBuyNow = () => {
+    const existing = JSON.parse(localStorage.getItem('cart') || '[]');
+    existing.push({ productId: product.id, name: product.name, price: product.price, quantity });
+    localStorage.setItem('cart', JSON.stringify(existing));
     toast.success("Redirecting to checkout...");
+    navigate('/checkout');
   };
 
   return (

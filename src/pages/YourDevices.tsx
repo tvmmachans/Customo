@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 
 const YourDevices = () => {
+  const navigate = useNavigate();
   const [devices, setDevices] = useState([
     {
       id: 1,
@@ -273,7 +275,7 @@ const YourDevices = () => {
             <p className="text-muted-foreground mb-6">
               You haven't added any robots to your fleet yet.
             </p>
-            <Button variant="cta">Add Your First Device</Button>
+            <Button variant="cta" onClick={() => navigate('/custom-build')}>Add Your First Device</Button>
           </div>
         )}
       </div>
