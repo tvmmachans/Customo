@@ -24,7 +24,6 @@ import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
-import ButtonsDemo from "./pages/ButtonsDemo";
 
 // Configure React Query with professional settings
 const queryClient = new QueryClient({
@@ -80,7 +79,6 @@ const App = () => (
                   <Route path="/orders/:id" element={<OrderDetail />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/buttons" element={<ButtonsDemo />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

@@ -177,8 +177,8 @@ router.post('/', [
         type,
         location,
         productId,
-        userId: userId as any
-      } as any,
+        userId: userId!
+      },
       include: {
         product: {
           select: {

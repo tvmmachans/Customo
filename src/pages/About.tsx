@@ -81,22 +81,22 @@ const About = () => {
       description: "Started with a vision to make robotics accessible to everyone"
     },
     {
-      year: "2025", 
+      year: "2024", 
       title: "First Commercial Robot",
       description: "Launched our breakthrough security robot, revolutionizing the industry"
     },
     {
-      year: "2025",
+      year: "2024",
       title: "Global Expansion",
       description: "Expanded operations to 15 countries, serving major enterprises worldwide"
     },
     {
-      year: "2025",
+      year: "2024",
       title: "AI Integration",
       description: "Integrated advanced AI capabilities across all product lines"
     },
     {
-      year: "2025",
+      year: "2024",
       title: "Custom Build Platform",
       description: "Launched industry-first custom robot builder platform"
     },
