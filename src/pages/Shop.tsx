@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { Card, CardContent } from "@/components/ui/card";
+import { useCart } from '@/contexts/CartContext';
 import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart, Filter } from "lucide-react";
 
@@ -90,6 +91,8 @@ const Shop = () => {
     ? products 
     : products.filter(product => product.category === selectedCategory);
 
+  const cart = useCart();
+
   return (
     <div className="min-h-screen pt-20">
       <div className="container mx-auto px-4 py-8">
@@ -173,11 +176,7 @@ const Shop = () => {
                     </Button>
                   </Link>
                   <Button variant="cta" size="sm" onClick={() => {
-                    const existing = JSON.parse(localStorage.getItem('cart') || '[]');
-                    existing.push({ productId: product.id, name: product.name, price: product.price, quantity: 1 });
-                    localStorage.setItem('cart', JSON.stringify(existing));
-                    // Notify other components that cart changed
-                    window.dispatchEvent(new Event('cartUpdated'));
+                    cart.addItem({ productId: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
                     toast.success(`Added ${product.name} to cart`);
                   }}>
                     <ShoppingCart className="h-4 w-4" />

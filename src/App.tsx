@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import ErrorBoundary from "./components/ErrorBoundary";
 import NotificationProvider from "./components/NotificationProvider";
 import Navigation from "./components/Navigation";
+import { CartProvider } from "./contexts/CartContext";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -61,9 +62,10 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <div className="min-h-screen bg-background">
-                <Navigation />
-                <Routes>
+              <CartProvider>
+                <div className="min-h-screen bg-background">
+                  <Navigation />
+                  <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/shop" element={<Shop />} />
                   <Route path="/product/:id" element={<ProductDetail />} />
@@ -83,8 +85,9 @@ const App = () => (
                   <Route path="/buttons" element={<Buttons />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
+                  </Routes>
+                </div>
+              </CartProvider>
             </BrowserRouter>
           </NotificationProvider>
         </TooltipProvider>

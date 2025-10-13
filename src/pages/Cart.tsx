@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,48 +16,13 @@ import {
   Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface CartItem {
-  productId: number;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-}
+import { useCart } from '@/contexts/CartContext';
 
 const Cart = () => {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [couponCode, setCouponCode] = useState('');
-  const [discount, setDiscount] = useState(0);
-
-  useEffect(() => {
-    const savedCart = JSON.parse(localStorage.getItem('cart') || '[]');
-    setCartItems(savedCart);
-  }, []);
-
-  const updateCartInStorage = (newCart: CartItem[]) => {
-    localStorage.setItem('cart', JSON.stringify(newCart));
-    setCartItems(newCart);
-    window.dispatchEvent(new Event('cartUpdated'));
-  };
-
-  const updateQuantity = (productId: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    
-    const updatedCart = cartItems.map(item =>
-      item.productId === productId 
-        ? { ...item, quantity: newQuantity }
-        : item
-    );
-    updateCartInStorage(updatedCart);
-  };
-
-  const removeItem = (productId: number) => {
-    const updatedCart = cartItems.filter(item => item.productId !== productId);
-    updateCartInStorage(updatedCart);
-    toast.success('Item removed from cart');
-  };
+  const { items: cartItems, updateItem, removeItem, subtotal } = useCart();
+  const [couponCode, setCouponCode] = React.useState('');
+  const [discount, setDiscount] = React.useState(0);
 
   const applyCoupon = () => {
     if (couponCode.toLowerCase() === 'welcome10') {
@@ -68,7 +33,6 @@ const Cart = () => {
     }
   };
 
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const discountAmount = subtotal * discount;
   const shipping = subtotal > 500 ? 0 : 25;
   const total = subtotal - discountAmount + shipping;
@@ -126,7 +90,7 @@ const Cart = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        onClick={() => updateItem(item.productId, Math.max(1, item.quantity - 1))}
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -136,7 +100,7 @@ const Cart = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        onClick={() => updateItem(item.productId, item.quantity + 1)}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>

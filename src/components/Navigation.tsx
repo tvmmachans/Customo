@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import MiniCart from "@/components/MiniCart";
+import { useCart } from "@/contexts/CartContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,36 +15,21 @@ import { MoreVertical, MessageCircle, Phone, Info } from "lucide-react";
 const Navigation = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false); // This will be connected to Supabase later
-  const [cartCount, setCartCount] = useState<number>(0);
+  const { items } = useCart();
   const { user, logout } = useAuth();
+  const cartCount = items.reduce((s, i) => s + (i.quantity || 0), 0);
+  const [miniOpen, setMiniOpen] = useState(false);
+  const { lastUpdated } = useCart();
+  const [pulsing, setPulsing] = useState(false);
 
+  // Trigger pulse animation when cart updates
   useEffect(() => {
-    const readCart = () => {
-      try {
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        const count = Array.isArray(cart) ? cart.reduce((s: number, i: any) => s + (i.quantity || 1), 0) : 0;
-        setCartCount(count);
-      } catch (e) {
-        setCartCount(0);
-      }
-    };
+    if (!lastUpdated) return;
+    setPulsing(true);
+    const t = setTimeout(() => setPulsing(false), 600);
+    return () => clearTimeout(t);
+  }, [lastUpdated]);
 
-    readCart();
-
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'cart') readCart();
-    };
-
-    const onCartUpdated = () => readCart();
-
-    window.addEventListener('storage', onStorage);
-    window.addEventListener('cartUpdated', onCartUpdated as EventListener);
-
-    return () => {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('cartUpdated', onCartUpdated as EventListener);
-    };
-  }, []);
 
   return (
     <nav className="fixed top-0 w-full z-50 glass border-b border-border/30">
@@ -105,8 +92,8 @@ const Navigation = () => {
 
           {/* Right side - Login & Menu */}
           <div className="flex items-center space-x-4">
-            {/* Cart button - shows cart link and a placeholder badge count */}
-            <Link to="/cart" className="hidden sm:inline-flex">
+            {/* Cart button - opens mini cart drawer */}
+            <button onClick={() => setMiniOpen(true)} className="hidden sm:inline-flex">
               <Button variant="ghost" size="sm" className="h-8 px-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -120,10 +107,11 @@ const Navigation = () => {
                 </svg>
                 Cart
                 {cartCount > 0 ? (
-                  <span aria-label={`${cartCount} items in cart`} className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">{cartCount}</span>
+                  <span aria-label={`${cartCount} items in cart`} className={`ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground ${pulsing ? 'badge-pulse' : ''}`}>{cartCount}</span>
                 ) : null}
               </Button>
-            </Link>
+            </button>
+            {miniOpen && <MiniCart onClose={() => setMiniOpen(false)} />}
             {user ? (
               <Button
                 variant="outline"

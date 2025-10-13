@@ -6,12 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Star, ShoppingCart, Heart, Share2, ArrowLeft, Shield, Zap, Settings } from "lucide-react";
 import { toast } from "sonner";
+import { useCart } from '@/contexts/CartContext';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const cart = useCart();
 
   // Mock product data - in real app this would come from API/database
   const product = {
@@ -67,19 +69,12 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
-    const existing = JSON.parse(localStorage.getItem('cart') || '[]');
-    existing.push({ productId: product.id, name: product.name, price: product.price, quantity });
-    localStorage.setItem('cart', JSON.stringify(existing));
-    // notify other parts of app
-    window.dispatchEvent(new Event('cartUpdated'));
+    cart.addItem({ productId: product.id, name: product.name, price: product.price, image: product.images[0], quantity });
     toast.success(`Added ${quantity}x ${product.name} to cart!`);
   };
 
   const handleBuyNow = () => {
-    const existing = JSON.parse(localStorage.getItem('cart') || '[]');
-    existing.push({ productId: product.id, name: product.name, price: product.price, quantity });
-    localStorage.setItem('cart', JSON.stringify(existing));
-    window.dispatchEvent(new Event('cartUpdated'));
+    cart.addItem({ productId: product.id, name: product.name, price: product.price, image: product.images[0], quantity });
     toast.success("Redirecting to checkout...");
     navigate('/checkout');
   };

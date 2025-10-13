@@ -17,6 +17,7 @@ import serviceRoutes from './routes/service';
 import customBuildRoutes from './routes/customBuild';
 import uploadRoutes from './routes/upload';
 import paymentRoutes from './routes/payment';
+import cartRoutes from './routes/cart';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -100,6 +101,7 @@ app.use('/api/service', authMiddleware, serviceRoutes);
 app.use('/api/custom-build', authMiddleware, customBuildRoutes);
 app.use('/api/upload', authMiddleware, uploadRoutes);
 app.use('/api/payment', authMiddleware, paymentRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Initialize services
 initializeSocketIO(io);
