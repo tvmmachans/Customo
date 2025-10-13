@@ -176,6 +176,8 @@ const Shop = () => {
                     const existing = JSON.parse(localStorage.getItem('cart') || '[]');
                     existing.push({ productId: product.id, name: product.name, price: product.price, quantity: 1 });
                     localStorage.setItem('cart', JSON.stringify(existing));
+                    // Notify other components that cart changed
+                    window.dispatchEvent(new Event('cartUpdated'));
                     toast.success(`Added ${product.name} to cart`);
                   }}>
                     <ShoppingCart className="h-4 w-4" />

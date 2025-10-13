@@ -70,6 +70,8 @@ const ProductDetail = () => {
     const existing = JSON.parse(localStorage.getItem('cart') || '[]');
     existing.push({ productId: product.id, name: product.name, price: product.price, quantity });
     localStorage.setItem('cart', JSON.stringify(existing));
+    // notify other parts of app
+    window.dispatchEvent(new Event('cartUpdated'));
     toast.success(`Added ${quantity}x ${product.name} to cart!`);
   };
 
@@ -77,6 +79,7 @@ const ProductDetail = () => {
     const existing = JSON.parse(localStorage.getItem('cart') || '[]');
     existing.push({ productId: product.id, name: product.name, price: product.price, quantity });
     localStorage.setItem('cart', JSON.stringify(existing));
+    window.dispatchEvent(new Event('cartUpdated'));
     toast.success("Redirecting to checkout...");
     navigate('/checkout');
   };

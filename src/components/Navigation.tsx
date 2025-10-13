@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,7 +13,36 @@ import { MoreVertical, MessageCircle, Phone, Info } from "lucide-react";
 const Navigation = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false); // This will be connected to Supabase later
+  const [cartCount, setCartCount] = useState<number>(0);
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    const readCart = () => {
+      try {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const count = Array.isArray(cart) ? cart.reduce((s: number, i: any) => s + (i.quantity || 1), 0) : 0;
+        setCartCount(count);
+      } catch (e) {
+        setCartCount(0);
+      }
+    };
+
+    readCart();
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'cart') readCart();
+    };
+
+    const onCartUpdated = () => readCart();
+
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('cartUpdated', onCartUpdated as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('cartUpdated', onCartUpdated as EventListener);
+    };
+  }, []);
 
   return (
     <nav className="fixed top-0 w-full z-50 glass border-b border-border/30">
@@ -90,7 +119,9 @@ const Navigation = () => {
                   <circle cx="18" cy="20" r="1" />
                 </svg>
                 Cart
-                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">0</span>
+                {cartCount > 0 ? (
+                  <span aria-label={`${cartCount} items in cart`} className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">{cartCount}</span>
+                ) : null}
               </Button>
             </Link>
             {user ? (
