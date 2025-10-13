@@ -3,7 +3,7 @@ import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
-// In-memory store for carts keyed by userId. Lightweight: not persisted.
+// Lightweight in-memory store used while DB generation/migration is resolved.
 const userCarts: Record<string, { productId: string; name?: string; price: number; quantity: number }[]> = {};
 
 /**
@@ -30,11 +30,12 @@ router.post('/sync', authMiddleware, async (req: Request, res: Response) => {
     // merge client (by summing quantities)
     for (const it of clientItems) {
       if (!it || !it.productId) continue;
-      const prev = map[it.productId];
+      const pid = String(it.productId);
+      const prev = map[pid];
       if (prev) {
         prev.quantity = (prev.quantity || 0) + (it.quantity || 0);
       } else {
-        map[it.productId] = { productId: it.productId, name: it.name, price: Number(it.price) || 0, quantity: it.quantity || 0 };
+        map[pid] = { productId: pid, name: it.name, price: Number(it.price) || 0, quantity: it.quantity || 0 };
       }
     }
 
