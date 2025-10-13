@@ -75,13 +75,13 @@ const Home = () => {
               <Card key={product.id} className="group hover:glow-primary transition-all duration-300 hover:scale-105">
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mb-4 group-hover:animate-float">
+                    <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mb-4">
                       <product.icon className="h-8 w-8 text-primary-foreground" />
                     </div>
                     <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
                     <p className="text-muted-foreground text-sm mb-4">{product.description}</p>
                     <p className="text-primary font-bold mb-4">{product.price}</p>
-                    <Button variant="outline" size="sm" className="w-full group-hover:bg-primary group-hover:text-primary-foreground">
+                    <Button variant="outline" size="sm" className="w-full">
                       View Details
                     </Button>
                   </div>

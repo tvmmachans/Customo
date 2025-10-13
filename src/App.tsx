@@ -24,11 +24,12 @@ import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
+import Buttons from "./pages/Buttons";
 
 // Configure React Query with professional settings
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
+      queries: {
       retry: (failureCount, error: any) => {
         // Don't retry on 4xx errors
         if (error?.status >= 400 && error?.status < 500) {
@@ -39,10 +40,10 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
       cacheTime: 10 * 60 * 1000, // 10 minutes
       refetchOnWindowFocus: false,
-    },
-    mutations: {
-      retry: false,
-    },
+      },
+      mutations: {
+        retry: false,
+      },
   },
 });
 
@@ -79,6 +80,7 @@ const App = () => (
                   <Route path="/orders/:id" element={<OrderDetail />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/buttons" element={<Buttons />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

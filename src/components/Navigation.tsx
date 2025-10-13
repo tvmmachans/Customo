@@ -61,14 +61,7 @@ const Navigation = () => {
             >
               Service
             </Link>
-            <Link
-              to="/buttons"
-              className={`text-foreground hover:text-primary transition-colors ${
-                location.pathname === "/buttons" ? "text-primary" : ""
-              }`}
-            >
-              UI
-            </Link>
+            {/* Buttons/UI page removed from main nav; replaced with cart button on the right */}
             {isLoggedIn && (
               <Link
                 to="/your-devices"
@@ -83,6 +76,23 @@ const Navigation = () => {
 
           {/* Right side - Login & Menu */}
           <div className="flex items-center space-x-4">
+            {/* Cart button - shows cart link and a placeholder badge count */}
+            <Link to="/cart" className="hidden sm:inline-flex">
+              <Button variant="ghost" size="sm" className="h-8 px-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-4 w-4 mr-2"
+                >
+                  <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  <circle cx="10" cy="20" r="1" />
+                  <circle cx="18" cy="20" r="1" />
+                </svg>
+                Cart
+                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">0</span>
+              </Button>
+            </Link>
             {user ? (
               <Button
                 variant="outline"
