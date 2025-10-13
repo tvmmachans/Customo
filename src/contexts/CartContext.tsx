@@ -52,7 +52,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let mounted = true;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
-    const debounceMs = Number(process.env.VITE_CART_SYNC_MS || 600);
+  const debounceMs = Number((import.meta as any).env?.VITE_CART_SYNC_MS ?? 600);
 
     const sync = async () => {
       try {
