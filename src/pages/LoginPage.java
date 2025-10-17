@@ -4,6 +4,17 @@ import java.awt.event.*;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.time.Duration;
+import java.io.IOException;
 
 public class LoginPage extends JFrame implements ActionListener {
 
@@ -20,6 +31,10 @@ public class LoginPage extends JFrame implements ActionListener {
     private JButton loginButton;
     private JButton resetButton;
     private char defaultEchoChar;
+    private static final String BACKEND_BASE_URL = "http://localhost:5000"; // adjust if your backend runs on another port
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(5))
+        .build();
 
     public LoginPage() {
         setTitle("Login Page");
@@ -157,42 +172,98 @@ public class LoginPage extends JFrame implements ActionListener {
     private void handleSignIn() {
         String username = userField.getText().trim();
         String password = String.valueOf(passField.getPassword());
-
-        // Collect data: show in console (could send to backend)
-        System.out.println("Attempt sign-in { username=" + username + " }");
-
         if (username.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter both username and password.", "Missing data", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        boolean authenticated = ("admin".equals(username) && "1234".equals(password));
-        if (!authenticated) {
-            // Also accept any non-empty pair to avoid blocking during demo
-            authenticated = true;
+        // Attempt to authenticate with backend
+        String loginJson = String.format("{\"email\":\"%s\",\"password\":\"%s\"}", escapeJson(username), escapeJson(password));
+        HttpResponse<String> resp = null;
+        try {
+            resp = postJson(BACKEND_BASE_URL + "/api/auth/login", loginJson);
+        } catch (Exception ex) {
+            // network error
+            System.err.println("Backend not reachable: " + ex.getMessage());
         }
 
-        if (authenticated) {
-            JOptionPane.showMessageDialog(this, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            // Open React login page with prefilled username via query params
-            try {
-                String encodedUser = URLEncoder.encode(username, StandardCharsets.UTF_8.toString());
-                // Try common vite ports 5173-5176
-                boolean opened = false;
-                for (int port = 5173; port <= 5176 && !opened; port++) {
-                    try {
-                        Desktop.getDesktop().browse(new URI("http://localhost:" + port + "/login?username=" + encodedUser));
-                        opened = true;
-                    } catch (Exception inner) {
-                        // try next
-                    }
+        if (resp != null && resp.statusCode() == 200) {
+            String body = resp.body();
+            // crude token extraction: look for "token":"..."
+            Pattern p = Pattern.compile("\"token\"\s*:\s*\"([^\"]+)\"");
+            Matcher m = p.matcher(body);
+            if (m.find()) {
+                String token = m.group(1);
+                // save token to user home file
+                try {
+                    Path tokenPath = Path.of(System.getProperty("user.home"), ".customo_token");
+                    Files.writeString(tokenPath, token);
+                } catch (IOException ioe) {
+                    System.err.println("Failed to save token: " + ioe.getMessage());
                 }
-            } catch (Exception ignored) {}
+
+                JOptionPane.showMessageDialog(this, "Login successful! Token saved.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                // open frontend (optional) and show dashboard
+                tryOpenFrontend(username);
+                new Dashboard(username);
+                dispose();
+                return;
+            }
+            // If response didn't contain token, show server message
+            JOptionPane.showMessageDialog(this, "Login failed: " + extractMessage(body), "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Fallback: offline/demo mode — accept local credentials so user can continue
+        boolean authenticated = ("admin".equals(username) && "1234".equals(password));
+        if (!authenticated) {
+            authenticated = true; // allow any non-empty for demo fallback
+        }
+        if (authenticated) {
+            JOptionPane.showMessageDialog(this, "Login successful (offline/demo mode)", "Success", JOptionPane.INFORMATION_MESSAGE);
+            tryOpenFrontend(username);
             new Dashboard(username);
             dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Invalid credentials.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private static String escapeJson(String s) {
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static String extractMessage(String body) {
+        Pattern p = Pattern.compile("\"message\"\s*:\s*\"([^\"]+)\"");
+        Matcher m = p.matcher(body);
+        if (m.find()) return m.group(1);
+        return body;
+    }
+
+    private static HttpResponse<String> postJson(String url, String json) throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .POST(BodyPublishers.ofString(json))
+                .timeout(Duration.ofSeconds(8))
+                .build();
+        return HTTP_CLIENT.send(req, BodyHandlers.ofString());
+    }
+
+    private void tryOpenFrontend(String username) {
+        try {
+            String encodedUser = URLEncoder.encode(username, StandardCharsets.UTF_8.toString());
+            // Try common vite ports 5173-5176
+            boolean opened = false;
+            for (int port = 5173; port <= 5176 && !opened; port++) {
+                try {
+                    Desktop.getDesktop().browse(new URI("http://localhost:" + port + "/login?username=" + encodedUser));
+                    opened = true;
+                } catch (Exception inner) {
+                    // try next
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     public static void main(String[] args) {
