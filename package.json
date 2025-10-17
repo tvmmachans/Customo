@@ -17,7 +17,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "analyze": "vite-bundle-analyzer"
     ,"start:oneclick": "powershell -ExecutionPolicy Bypass -File ./scripts/start-all.ps1"
-    ,"start:oneclick:cross": "node ./scripts/start-all.js"
+    ,"start:oneclick:cross": "node ./scripts/start-all.cjs"
   },
   "author": "Lovable",
   "license": "MIT",

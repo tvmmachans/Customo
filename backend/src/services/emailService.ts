@@ -1,7 +1,4 @@
 import nodemailer from 'nodemailer';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 
 // Create email transporter
 const createTransporter = () => {
@@ -232,16 +229,28 @@ export const sendLowBatteryAlertEmail = async (userEmail: string, device: any) =
 // Initialize email service
 export const initializeEmailService = () => {
   console.log('📧 Email service initialized');
-  
-  // Test email configuration
-  const transporter = createTransporter();
-  transporter.verify((error: Error | null, success?: boolean) => {
-    if (error) {
-      console.error('❌ Email service configuration error:', error);
-    } else {
-      console.log('✅ Email service ready to send emails');
-    }
-  });
+
+  // If SMTP creds are not provided, skip verification in dev to avoid blocking startup
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+  if (!smtpUser || !smtpPass) {
+    console.warn('⚠️ SMTP credentials missing - skipping email verification. Emails will not be sent.');
+    return;
+  }
+
+  // Test email configuration but never throw - only log errors
+  try {
+    const transporter = createTransporter();
+    transporter.verify((error: Error | null, success?: boolean) => {
+      if (error) {
+        console.error('❌ Email service configuration error (will not stop server):', error);
+      } else {
+        console.log('✅ Email service ready to send emails');
+      }
+    });
+  } catch (err) {
+    console.error('❌ Email service initialization failed (continuing):', err);
+  }
 };
 
 // Bulk email functions

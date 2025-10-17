@@ -29,7 +29,7 @@ const ProductDetail = () => {
     description: "The Guardian Security Bot X1 represents the pinnacle of autonomous security technology. Equipped with advanced AI surveillance, night vision capabilities, and intelligent patrol algorithms, this robot provides 24/7 protection for your property.",
     features: [
       "360° HD Camera with Night Vision",
-      "AI-Powered Motion Detection", 
+      "AI-Powered Motion Detection",
       "Autonomous Patrol Routes",
       "Real-time Alert System",
       "Weather Resistant Design",
