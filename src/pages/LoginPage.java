@@ -4,11 +4,7 @@ import java.awt.event.*;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpResponse.BodyHandlers;
+import java.sql.SQLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
@@ -31,10 +27,10 @@ public class LoginPage extends JFrame implements ActionListener {
     private JButton loginButton;
     private JButton resetButton;
     private char defaultEchoChar;
-    private static final String BACKEND_BASE_URL = "http://localhost:5000"; // adjust if your backend runs on another port
-    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(5))
-        .build();
+    // Switched to direct DB validation via UserDao
+    // Backend HTTP calls removed
+    
+    private UserDao userDao = new UserDao();
 
     public LoginPage() {
         setTitle("Login Page");
@@ -177,50 +173,14 @@ public class LoginPage extends JFrame implements ActionListener {
             return;
         }
 
-        // Attempt to authenticate with backend
-        String loginJson = String.format("{\"email\":\"%s\",\"password\":\"%s\"}", escapeJson(username), escapeJson(password));
-        HttpResponse<String> resp = null;
+        boolean authenticated = false;
         try {
-            resp = postJson(BACKEND_BASE_URL + "/api/auth/login", loginJson);
-        } catch (Exception ex) {
-            // network error
-            System.err.println("Backend not reachable: " + ex.getMessage());
-        }
-
-        if (resp != null && resp.statusCode() == 200) {
-            String body = resp.body();
-            // crude token extraction: look for "token":"..."
-            Pattern p = Pattern.compile("\"token\"\s*:\s*\"([^\"]+)\"");
-            Matcher m = p.matcher(body);
-            if (m.find()) {
-                String token = m.group(1);
-                // save token to user home file
-                try {
-                    Path tokenPath = Path.of(System.getProperty("user.home"), ".customo_token");
-                    Files.writeString(tokenPath, token);
-                } catch (IOException ioe) {
-                    System.err.println("Failed to save token: " + ioe.getMessage());
-                }
-
-                JOptionPane.showMessageDialog(this, "Login successful! Token saved.", "Success", JOptionPane.INFORMATION_MESSAGE);
-                // open frontend (optional) and show dashboard
-                tryOpenFrontend(username);
-                new Dashboard(username);
-                dispose();
-                return;
-            }
-            // If response didn't contain token, show server message
-            JOptionPane.showMessageDialog(this, "Login failed: " + extractMessage(body), "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // Fallback: offline/demo mode — accept local credentials so user can continue
-        boolean authenticated = ("admin".equals(username) && "1234".equals(password));
-        if (!authenticated) {
-            authenticated = true; // allow any non-empty for demo fallback
+            authenticated = userDao.validateLogin(username, password);
+        } catch (SQLException se) {
+            System.err.println("Login DB error: " + se.getMessage());
         }
         if (authenticated) {
-            JOptionPane.showMessageDialog(this, "Login successful (offline/demo mode)", "Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Login successful", "Success", JOptionPane.INFORMATION_MESSAGE);
             tryOpenFrontend(username);
             new Dashboard(username);
             dispose();
@@ -233,22 +193,7 @@ public class LoginPage extends JFrame implements ActionListener {
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
-    private static String extractMessage(String body) {
-        Pattern p = Pattern.compile("\"message\"\s*:\s*\"([^\"]+)\"");
-        Matcher m = p.matcher(body);
-        if (m.find()) return m.group(1);
-        return body;
-    }
-
-    private static HttpResponse<String> postJson(String url, String json) throws Exception {
-        HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .POST(BodyPublishers.ofString(json))
-                .timeout(Duration.ofSeconds(8))
-                .build();
-        return HTTP_CLIENT.send(req, BodyHandlers.ofString());
-    }
+    // removed HTTP helpers (using JDBC now)
 
     private void tryOpenFrontend(String username) {
         try {

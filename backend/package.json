@@ -7,16 +7,13 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:seed": "ts-node prisma/seed.ts",
+    "db:init": "ts-node src/scripts/dbInit.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix"
   },
   "dependencies": {
-    "@prisma/client": "^6.17.1",
     "bcryptjs": "^2.4.3",
+    "sqlite3": "^5.1.6",
     "cloudinary": "^1.41.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -51,7 +48,7 @@
     "@typescript-eslint/parser": "^6.15.0",
     "eslint": "^8.56.0",
     "nodemon": "^3.0.2",
-    "prisma": "^5.7.1",
+    
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },

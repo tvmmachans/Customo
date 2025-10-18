@@ -4,12 +4,18 @@ import java.awt.event.*;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.io.IOException;
 
 public class SignUpPage extends JFrame {
     private JTextField emailField;
     private JPasswordField passField;
     private JPasswordField confirmField;
     private JButton createButton;
+    private UserDao userDao = new UserDao();
 
     public SignUpPage() {
         setTitle("Sign Up");
@@ -90,19 +96,27 @@ public class SignUpPage extends JFrame {
             JOptionPane.showMessageDialog(this, "Passwords do not match", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        JOptionPane.showMessageDialog(this, "Account created!", "Success", JOptionPane.INFORMATION_MESSAGE);
         try {
-            String enc = URLEncoder.encode(email, StandardCharsets.UTF_8.toString());
-            boolean opened = false;
-            for (int port = 5173; port <= 5176 && !opened; port++) {
-                try {
-                    Desktop.getDesktop().browse(new URI("http://localhost:" + port + "/signup?email=" + enc));
-                    opened = true;
-                } catch (Exception ignore) {}
-            }
-        } catch (Exception ignore) {}
-        dispose();
+            userDao.createUser(email, p1);
+            JOptionPane.showMessageDialog(this, "Account created!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            try {
+                String enc = URLEncoder.encode(email, StandardCharsets.UTF_8.toString());
+                boolean opened = false;
+                for (int port = 5173; port <= 5176 && !opened; port++) {
+                    try {
+                        Desktop.getDesktop().browse(new URI("http://localhost:" + port + "/signup?email=" + enc));
+                        opened = true;
+                    } catch (Exception ignore) {}
+                }
+            } catch (Exception ignore) {}
+            dispose();
+            return;
+        } catch (SQLException se) {
+            JOptionPane.showMessageDialog(this, "Sign up failed: " + se.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
+
+    // removed HTTP helpers and JSON utils (using JDBC now)
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(SignUpPage::new);

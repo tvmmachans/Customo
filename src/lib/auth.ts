@@ -1,3 +1,8 @@
+// NOTE: This file previously mocked authentication.
+// It now uses the real backend API via apiClient.
+
+import apiClient from './api';
+
 export type AuthUser = {
   id: string;
   email: string;
@@ -6,26 +11,49 @@ export type AuthUser = {
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "auth_user";
 
-export async function signIn(email: string, password: string): Promise<{ user: AuthUser; token: string }>{
-  // Simulate network call. Replace with real API.
-  await new Promise((r) => setTimeout(r, 400));
-
+export async function signIn(email: string, password: string): Promise<{ user: AuthUser; token: string }> {
   if (!email || !password) {
     throw new Error("Missing credentials");
   }
 
-  const token = btoa(`${email}:${Date.now()}`);
-  const user: AuthUser = { id: "u_" + Math.random().toString(36).slice(2), email };
+  try {
+    const res = await apiClient.login(email, password);
 
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+    // Expecting backend shape: { success, data: { user, token } }
+    const payload: any = res as any;
+    if (!payload?.success || !payload?.data?.token || !payload?.data?.user) {
+      throw new Error(payload?.message || 'Login failed');
+    }
 
-  return { user, token };
+    const token: string = payload.data.token as string;
+    const user: AuthUser = {
+      id: String(payload.data.user.id),
+      email: String(payload.data.user.email)
+    };
+
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+
+    // Also update apiClient token for subsequent requests
+    try {
+      (apiClient as any).setToken?.(token);
+    } catch {}
+
+    return { user, token };
+  } catch (error: any) {
+    // Ensure no partial state is stored on failure
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    throw new Error(error?.message || 'Unable to login');
+  }
 }
 
 export function signOut(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  try {
+    (apiClient as any).setToken?.(null);
+  } catch {}
 }
 
 export function getToken(): string | null {

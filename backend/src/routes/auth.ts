@@ -2,12 +2,13 @@ import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 // Use CommonJS helper for JWT to centralize secret handling and types
 const { signToken, verifyToken } = require('../utils/jwt');
-import { PrismaClient } from '@prisma/client';
+import { getPool, withConnection } from '../db/sqlite';
 import { body, validationResult } from 'express-validator';
 import { AuthRequest } from '../middleware/auth';
+import crypto from 'crypto';
 
 const router = express.Router();
-const prisma = new PrismaClient();
+// Using MySQL via mysql2 now; no Prisma
 
 // Register
 router.post('/register', [
@@ -32,11 +33,12 @@ router.post('/register', [
     const { email, password, firstName, lastName, phone, company } = req.body;
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (existingUser) {
+    const result = await getPool().query(
+      'SELECT id FROM users WHERE email = ? LIMIT 1',
+      [email]
+    );
+    const rows = result[0] as any[];
+    if (Array.isArray(rows) && rows.length > 0) {
       res.status(400).json({
         success: false,
         message: 'User already exists with this email'
@@ -49,26 +51,24 @@ router.post('/register', [
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        phone,
-        company
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        company: true,
-        role: true,
-        createdAt: true
-      }
+    const userId = cryptoRandomId();
+    await withConnection(async (conn) => {
+      await conn.query(
+        `INSERT INTO users (id, email, password, first_name, last_name, phone, company, role, is_active, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'CUSTOMER', 1, NOW(), NOW())`,
+        [userId, email, hashedPassword, firstName || null, lastName || null, phone || null, company || null]
+      );
     });
+    const user = {
+      id: userId,
+      email,
+      firstName: firstName || null,
+      lastName: lastName || null,
+      phone: phone || null,
+      company: company || null,
+      role: 'CUSTOMER',
+      createdAt: new Date()
+    };
 
     // Generate JWT token
     // Generate JWT token
@@ -116,11 +116,13 @@ router.post('/login', [
     const { email, password } = req.body;
 
     // Find user
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (!user || !user.isActive) {
+    const result = await getPool().query(
+      'SELECT id, email, password, first_name, last_name, phone, company, role, is_active, created_at FROM users WHERE email = ? LIMIT 1',
+      [email]
+    );
+    const rows = result[0] as any[];
+    const user = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+    if (!user || !user.is_active) {
       res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -154,12 +156,12 @@ router.post('/login', [
         user: {
           id: user.id,
           email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
+          firstName: user.first_name,
+          lastName: user.last_name,
           phone: user.phone,
           company: user.company,
           role: user.role,
-          createdAt: user.createdAt
+          createdAt: user.created_at
         },
         token
       }
@@ -194,23 +196,14 @@ router.get('/me', async (req: AuthRequest, res: Response): Promise<void> => {
       return;
     }
     
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        company: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true
-      }
-    });
+    const result = await getPool().query(
+      'SELECT id, email, first_name, last_name, phone, company, role, is_active, created_at, updated_at FROM users WHERE id = ? LIMIT 1',
+      [decoded.userId]
+    );
+    const rows = result[0] as any[];
+    const user = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
 
-    if (!user || !user.isActive) {
+    if (!user || !user.is_active) {
       res.status(401).json({
         success: false,
         message: 'User not found or inactive'
@@ -220,7 +213,18 @@ router.get('/me', async (req: AuthRequest, res: Response): Promise<void> => {
 
     res.json({
       success: true,
-      data: { user }
+      data: { user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        phone: user.phone,
+        company: user.company,
+        role: user.role,
+        isActive: !!user.is_active,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
+      } }
     });
   } catch (error) {
     console.error('Get user error:', error);
@@ -258,30 +262,32 @@ router.put('/profile', [
     }
     const { firstName, lastName, phone, company } = req.body;
 
-    const user = await prisma.user.update({
-      where: { id: decoded.userId },
-      data: {
-        firstName,
-        lastName,
-        phone,
-        company
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        company: true,
-        role: true,
-        updatedAt: true
-      }
+    await withConnection(async (conn) => {
+      await conn.query(
+        `UPDATE users SET first_name = ?, last_name = ?, phone = ?, company = ?, updated_at = NOW() WHERE id = ?`,
+        [firstName || null, lastName || null, phone || null, company || null, decoded.userId]
+      );
     });
+    const result = await getPool().query(
+      'SELECT id, email, first_name, last_name, phone, company, role, updated_at FROM users WHERE id = ? LIMIT 1',
+      [decoded.userId]
+    );
+    const rows = result[0] as any[];
+    const user = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
 
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: { user }
+      data: { user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        phone: user.phone,
+        company: user.company,
+        role: user.role,
+        updatedAt: user.updated_at,
+      } }
     });
   } catch (error) {
     console.error('Update profile error:', error);
@@ -327,11 +333,12 @@ router.put('/change-password', [
     }
     const { currentPassword, newPassword } = req.body;
 
-    // Get user with password
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    });
-
+    const result = await getPool().query(
+      'SELECT id, password FROM users WHERE id = ? LIMIT 1',
+      [decoded.userId]
+    );
+    const rows = result[0] as any[];
+    const user = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
     if (!user) {
       res.status(404).json({
         success: false,
@@ -355,9 +362,8 @@ router.put('/change-password', [
     const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
 
     // Update password
-    await prisma.user.update({
-      where: { id: decoded.userId },
-      data: { password: hashedNewPassword }
+    await withConnection(async (conn) => {
+      await conn.query('UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?', [hashedNewPassword, decoded.userId]);
     });
 
     res.json({
@@ -374,3 +380,10 @@ router.put('/change-password', [
 });
 
 export default router;
+
+function cryptoRandomId(): string {
+  // UUID v4 compatible
+  return ([1e7] as any+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, (c: any) =>
+    (c ^ (crypto.randomBytes(1)[0] & (15 >> (c / 4)))).toString(16)
+  );
+}

@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { getPool } from '../db/sqlite';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -38,17 +36,14 @@ export const authMiddleware = async (
     const decoded = jwt.verify(token, jwtSecret) as any;
     
     // Get user from database
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        isActive: true
-      }
-    });
+    const result = await getPool().query(
+      'SELECT id, email, role, is_active FROM users WHERE id = ? LIMIT 1',
+      [decoded.userId]
+    );
+    const rows = result[0] as any[];
+    const user = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
 
-    if (!user || !user.isActive) {
+    if (!user || !user.is_active) {
       return res.status(401).json({ 
         success: false, 
         message: 'Invalid token or user not found.' 

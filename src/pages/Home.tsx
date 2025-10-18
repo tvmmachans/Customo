@@ -81,9 +81,11 @@ const Home = () => {
                     <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
                     <p className="text-muted-foreground text-sm mb-4">{product.description}</p>
                     <p className="text-primary font-bold mb-4">{product.price}</p>
-                    <Button variant="outline" size="sm" className="w-full">
-                      View Details
-                    </Button>
+                    <Link to={`/product/${product.id}`} className="w-full">
+                      <Button variant="outline" size="sm" className="w-full">
+                        View Details
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
