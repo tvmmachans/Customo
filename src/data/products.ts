@@ -1,0 +1,27 @@
+export const products = [
+  { id: 1, name: "Guardian Bot X1", category: "security", price: 34999, image: "/placeholder.svg", description: "Compact perimeter security robot with night vision.", features: ["Night vision & PIR sensors","Autonomous patrol routes","Tamper alerts","Local storage & cloud sync"] },
+  { id: 2, name: "Sentinel Rover P3", category: "security", price: 42999, image: "/placeholder.svg", description: "Rugged rover for outdoor perimeter surveillance.", features: ["All-terrain wheels","4K zoom camera","Two-way audio","GPS geofencing"] },
+  { id: 3, name: "EyeGuard V2", category: "security", price: 25499, image: "/placeholder.svg", description: "Compact camera drone for quick indoor inspections.", features: ["Stabilized 1080p camera","Low-light performance","Auto-return home","AI motion detection"] },
+  { id: 4, name: "TitanSentinel R9", category: "security", price: 174999, image: "/placeholder.svg", description: "Enterprise-grade heavy security bot with extended endurance.", features: ["Long-range LIDAR","Thermal + optical sensors","Armored chassis","Edge AI for threat classification"] },
+
+  { id: 5, name: "RoboMaid S7", category: "assistant", price: 18999, image: "/placeholder.svg", description: "Household assistant for cleaning and basic chores.", features: ["Vacuum + mop modes","Smart scheduling","Voice assistant integration","Slim profile for under-furniture"] },
+  { id: 6, name: "HomeMate MiniBot A2", category: "assistant", price: 29499, image: "/placeholder.svg", description: "Compact companion for reminders and light tasks.", features: ["Personal reminders","Smart home hub","Gesture control","Low-noise operation"] },
+  { id: 7, name: "SmartButler R3", category: "assistant", price: 21499, image: "/placeholder.svg", description: "Personal butler robot for household assistance.", features: ["Item fetching","Schedule management","Secure storage compartment","Custom voice responses"] },
+  { id: 8, name: "EchoCompanion R5", category: "assistant", price: 19999, image: "/placeholder.svg", description: "Social companion bot with conversational AI.", features: ["Conversational AI","Media playback","Facial recognition","Emotion-aware responses"] },
+  { id: 9, name: "HandyMate B2", category: "assistant", price: 32999, image: "/placeholder.svg", description: "Multi-purpose helper for home workshops.", features: ["Tool carrier","Precise arm movements","Safety interlocks","Modular attachments"] },
+  { id: 10, name: "OmniServe H1", category: "assistant", price: 159999, image: "/placeholder.svg", description: "High-end home server & service robot for large homes.", features: ["Multi-room navigation","High-capacity storage","Pro service integrations","Enterprise-grade security"] },
+  { id: 11, name: "PetPal Mini", category: "assistant", price: 23999, image: "/placeholder.svg", description: "Companion robot designed for pet interaction and care.", features: ["Treat dispenser","Play routines","Pet monitoring camera","Safe low-speed movement"] },
+
+  { id: 12, name: "TaskPro M2", category: "industrial", price: 44499, image: "/placeholder.svg", description: "Compact industrial automation arm for small factories.", features: ["6-axis precision arm","PLC integration","High payload","Safety-rated stops"] },
+  { id: 13, name: "MiniWorker Z4", category: "industrial", price: 49999, image: "/placeholder.svg", description: "Mobile worker robot for warehouses and sorting.", features: ["Autonomous navigation","Barcode scanning","Dynamic routing","Battery hot-swap"] },
+  { id: 14, name: "ForgeMate X10", category: "industrial", price: 239999, image: "/placeholder.svg", description: "Heavy fabrication robot for manufacturing lines.", features: ["High-torque actuators","Integrated cooling","Precision welding options","Factory-grade reliability"] },
+  { id: 15, name: "DeliveryBot D1", category: "industrial", price: 39999, image: "/placeholder.svg", description: "Autonomous delivery robot for campuses and warehouses.", features: ["Secure cargo bay","Route optimization","Collision avoidance","Remote monitoring"] },
+  { id: 16, name: "LoadMaster G8", category: "industrial", price: 399999, image: "/placeholder.svg", description: "Heavy-lift robot for logistics and construction.", features: ["High-capacity lift","Stability control","Teleoperation mode","Ruggedized frame"] },
+
+  { id: 17, name: "AeroEye Nano", category: "drone", price: 24999, image: "/placeholder.svg", description: "Pocket-sized surveillance drone for quick checks.", features: ["Foldable frame","30-min flight time","GPS waypointing","Auto-hover"] },
+  { id: 18, name: "SkyScout Micro", category: "drone", price: 27999, image: "/placeholder.svg", description: "Micro-drone for aerial photography and inspection.", features: ["3-axis gimbal","4K video","Fast charging","Wind-stable design"] },
+  { id: 19, name: "AirCarrier D5", category: "drone", price: 78999, image: "/placeholder.svg", description: "Medium-duty delivery drone for urban logistics.", features: ["Payload rail system","Redundant motors","Precision landing","Secure package bay"] },
+  { id: 20, name: "HawkVision R8", category: "drone", price: 199999, image: "/placeholder.svg", description: "High-end surveillance drone with long endurance.", features: ["Thermal + EO cameras","Long-range comms","Automated patrol missions","AI target tracking"] },
+];
+
+export default products;

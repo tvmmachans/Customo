@@ -7,6 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Star, ShoppingCart, Heart, Share2, ArrowLeft, Shield, Zap, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from '@/contexts/CartContext';
+import products from "@/data/products";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -15,66 +17,40 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const cart = useCart();
 
-  // Mock product data - in real app this would come from API/database
-  const product = {
-    id: 1,
-    name: "Guardian Security Bot X1",
-    price: 2999,
-    originalPrice: 3499,
-    rating: 4.8,
-    reviews: 124,
-    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-    badge: "Best Seller",
-    inStock: true,
-    description: "The Guardian Security Bot X1 represents the pinnacle of autonomous security technology. Equipped with advanced AI surveillance, night vision capabilities, and intelligent patrol algorithms, this robot provides 24/7 protection for your property.",
-    features: [
-      "360° HD Camera with Night Vision",
-      "AI-Powered Motion Detection",
-      "Autonomous Patrol Routes",
-      "Real-time Alert System",
-      "Weather Resistant Design",
-      "12-Hour Battery Life",
-    ],
-    specifications: {
-      "Height": "1.2m",
-      "Weight": "45kg", 
-      "Battery": "Li-ion 24V",
-      "Speed": "2.5 m/s",
-      "Range": "500m",
-      "Connectivity": "WiFi, 5G",
-    },
-    customerReviews: [
-      {
-        id: 1,
-        user: "John Smith",
-        rating: 5,
-        date: "2024-01-15",
-        comment: "Excellent security robot! The AI detection is incredibly accurate and the night vision works perfectly. Highly recommended!",
-      },
-      {
-        id: 2, 
-        user: "Sarah Johnson",
-        rating: 4,
-        date: "2024-01-10",
-        comment: "Great product overall. Easy to set up and works as advertised. The mobile app could use some improvements though.",
-      },
-      {
-        id: 3,
-        user: "Mike Davis",
-        rating: 5,
-        date: "2024-01-05", 
-        comment: "This robot has transformed our warehouse security. The patrol routes are smart and it catches things we would miss.",
-      },
-    ],
-  };
+  // find product from shared data store
+  const productId = Number(id);
+  const product = products.find(p => p.id === productId) || null;
+
+  if (!product) {
+    return (
+      <div className="min-h-screen pt-20">
+        <div className="container mx-auto px-4 py-8 text-center">
+          <h2 className="text-2xl font-bold">Product not found</h2>
+          <p className="mt-4 text-muted-foreground">We couldn't find the product you were looking for.</p>
+          <div className="mt-6">
+            <Link to="/shop">
+              <Button variant="outline">Back to shop</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const images = product.image ? [product.image] : [];
+  const rating = (product as any).rating ?? 4.6;
+  const originalPrice = (product as any).originalPrice ?? undefined;
+  const inStock = (product as any).inStock ?? true;
+  const specifications = (product as any).specifications ?? {};
+  const customerReviews = (product as any).customerReviews ?? [];
 
   const handleAddToCart = () => {
-    cart.addItem({ productId: product.id, name: product.name, price: product.price, image: product.images[0], quantity });
+    cart.addItem({ productId: product.id, name: product.name, price: product.price, image: product.image, quantity });
     toast.success(`Added ${quantity}x ${product.name} to cart!`);
   };
 
   const handleBuyNow = () => {
-    cart.addItem({ productId: product.id, name: product.name, price: product.price, image: product.images[0], quantity });
+    cart.addItem({ productId: product.id, name: product.name, price: product.price, image: product.image, quantity });
     toast.success("Redirecting to checkout...");
     navigate('/checkout');
   };
@@ -94,14 +70,10 @@ const ProductDetail = () => {
           {/* Product Images */}
           <div>
             <div className="mb-4">
-              <img
-                src={product.images[selectedImage]}
-                alt={product.name}
-                className="w-full h-96 object-cover rounded-lg bg-muted"
-              />
+              <ImagePlaceholder src={images[selectedImage]} alt={product.name} name={product.name} className="w-full h-96 object-cover rounded-lg bg-muted" />
             </div>
             <div className="flex gap-2">
-              {product.images.map((image, index) => (
+              {images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -109,7 +81,7 @@ const ProductDetail = () => {
                     selectedImage === index ? "border-primary" : "border-border"
                   }`}
                 >
-                  <img src={image} alt={`View ${index + 1}`} className="w-full h-full object-cover bg-muted" />
+                  <ImagePlaceholder src={image} alt={`View ${index + 1}`} name={product.name} className="w-full h-full object-cover bg-muted" />
                 </button>
               ))}
             </div>
@@ -118,11 +90,12 @@ const ProductDetail = () => {
           {/* Product Info */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              {product.badge && (
-                <Badge className="bg-cta text-cta-foreground">{product.badge}</Badge>
+              {/* badge optional */}
+              {(product as any).badge && (
+                <Badge className="bg-cta text-cta-foreground">{(product as any).badge}</Badge>
               )}
-              <Badge variant="outline" className={product.inStock ? "text-green-500" : "text-red-500"}>
-                {product.inStock ? "In Stock" : "Out of Stock"}
+              <Badge variant="outline" className={inStock ? "text-green-500" : "text-red-500"}>
+                {inStock ? "In Stock" : "Out of Stock"}
               </Badge>
             </div>
 
@@ -134,7 +107,7 @@ const ProductDetail = () => {
                   <Star
                     key={i}
                     className={`h-5 w-5 ${
-                      i < Math.floor(product.rating)
+                      i < Math.floor(rating)
                         ? "text-yellow-400 fill-current"
                         : "text-muted-foreground"
                     }`}
@@ -142,17 +115,17 @@ const ProductDetail = () => {
                 ))}
               </div>
               <span className="ml-2 text-muted-foreground">
-                {product.rating} ({product.customerReviews.length} reviews)
+                {rating} ({customerReviews.length} reviews)
               </span>
             </div>
 
             <div className="flex items-center gap-4 mb-6">
               <span className="text-4xl font-bold text-primary">
-                ${product.price.toLocaleString()}
+                ₹{product.price.toLocaleString('en-IN')}
               </span>
-              {product.originalPrice && (
+              {originalPrice && (
                 <span className="text-xl text-muted-foreground line-through">
-                  ${product.originalPrice.toLocaleString()}
+                  ₹{originalPrice.toLocaleString('en-IN')}
                 </span>
               )}
             </div>
@@ -211,13 +184,13 @@ const ProductDetail = () => {
                   <h3 className="text-lg font-semibold">Key Features</h3>
                 </div>
                 <ul className="space-y-2">
-                  {product.features.map((feature, index) => (
-                    <li key={index} className="flex items-center text-sm">
-                      <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                      {product.features.map((feature, index) => (
+                        <li key={index} className="flex items-center text-sm">
+                          <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
               </CardContent>
             </Card>
 
@@ -229,10 +202,10 @@ const ProductDetail = () => {
                   <h3 className="text-lg font-semibold">Specifications</h3>
                 </div>
                 <div className="space-y-2">
-                  {Object.entries(product.specifications).map(([key, value]) => (
+                  {Object.entries(specifications).map(([key, value]) => (
                     <div key={key} className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{key}:</span>
-                      <span>{value}</span>
+                      <span>{String(value)}</span>
                     </div>
                   ))}
                 </div>
@@ -269,7 +242,7 @@ const ProductDetail = () => {
         <div className="mt-16">
           <h3 className="text-2xl font-bold mb-6">Customer Reviews</h3>
           <div className="space-y-6">
-            {product.customerReviews.map((review) => (
+            {customerReviews.map((review: any) => (
               <Card key={review.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
