@@ -4,6 +4,10 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
+# Accept build-arg for API URL so Vite picks it up during build
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
 # Copy package files
 COPY package*.json ./
 COPY pnpm-lock.yaml* ./

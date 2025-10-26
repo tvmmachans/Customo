@@ -28,6 +28,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_URL: http://backend-java:8080/api
     image: customo-frontend:latest
     environment:
       - VITE_API_URL=http://backend-java:8080/api

@@ -70,6 +70,7 @@ class ApiClient {
   async register(userData: {
     email: string;
     password: string;
+    name: string;
     firstName?: string;
     lastName?: string;
     phone?: string;

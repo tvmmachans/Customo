@@ -29,10 +29,17 @@ const SignUp = () => {
     }
     setLoading(true);
     try {
-      // TODO: replace with real sign-up API
-      await new Promise((r) => setTimeout(r, 600));
+      // Use real sign-up API
+      const apiClient = (await import("@/lib/api")).default;
+      await apiClient.register({ email, password, name: email.split('@')[0] });
       toast({ title: "Account created", description: "You can now sign in." });
       navigate("/login?email=" + encodeURIComponent(email));
+    } catch (err: any) {
+      toast({ 
+        title: "Sign-up failed", 
+        description: err?.message ?? "Failed to create account", 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(false);
     }
