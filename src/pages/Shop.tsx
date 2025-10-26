@@ -8,13 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import products from "@/data/products";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 import { Star, ShoppingCart, Filter } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("default");
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(0);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 400000]);
 
   
 
@@ -33,8 +33,9 @@ const Shop = () => {
       const inText = product.name.toLowerCase().includes(q) || product.description.toLowerCase().includes(q) || product.features.join(" ").toLowerCase().includes(q);
       if (!inText) return false;
     }
-    if (minPrice > 0 && product.price < minPrice) return false;
-    if (maxPrice > 0 && product.price > maxPrice) return false;
+    const [minP, maxP] = priceRange;
+    if (minP > 0 && product.price < minP) return false;
+    if (maxP > 0 && product.price > maxP) return false;
     return true;
   };
 
@@ -75,7 +76,7 @@ const Shop = () => {
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
             <input
               type="search"
               placeholder="Search products..."
@@ -84,8 +85,10 @@ const Shop = () => {
               className="px-3 py-2 border rounded-md bg-white/5 text-sm w-56"
             />
 
-            <input type="number" placeholder="Min ₹" value={minPrice || ""} onChange={e => setMinPrice(Number(e.target.value || 0))} className="px-2 py-2 w-20 rounded-md bg-white/5 text-sm" />
-            <input type="number" placeholder="Max ₹" value={maxPrice || ""} onChange={e => setMaxPrice(Number(e.target.value || 0))} className="px-2 py-2 w-20 rounded-md bg-white/5 text-sm" />
+            <div className="w-72">
+              <div className="text-xs text-muted-foreground mb-1">Price range: ₹{priceRange[0].toLocaleString('en-IN')} - ₹{priceRange[1].toLocaleString('en-IN')}</div>
+              <Slider value={priceRange} onValueChange={(v) => setPriceRange([v[0], v[1]])} min={0} max={400000} step={1000} className="w-full" />
+            </div>
 
             <select value={sortOption} onChange={e => setSortOption(e.target.value)} className="px-3 py-2 rounded-md bg-white/5 text-sm">
               <option value="default">Sort</option>
