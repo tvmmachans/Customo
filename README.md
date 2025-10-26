@@ -156,12 +156,17 @@ Troubleshooting:
 
 1. **Start with Docker Compose**
    ```bash
-   docker-compose up -d
+   docker-compose up -d --build
    ```
 
 2. **Access the application**
    - Frontend: http://localhost:8080
-   - Backend API: http://localhost:5000
+   - Frontend (nginx): http://localhost
+   - Backend API: http://localhost:8080
+  
+Notes:
+- Development: use `.env.development` to point frontend to `http://localhost:8080/api`.
+- Production-compose uses service hostnames; `.env.production` sets `VITE_API_URL=http://backend-java:8080/api` for the frontend build.
    - Database: localhost:5432
 
 ### Manual Setup

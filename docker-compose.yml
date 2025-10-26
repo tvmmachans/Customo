@@ -1,6 +1,42 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: customo
+      POSTGRES_USER: customo
+      POSTGRES_PASSWORD: changeme
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  backend-java:
+    build: ./backend-java
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/customo
+      SPRING_DATASOURCE_USERNAME: customo
+      SPRING_DATASOURCE_PASSWORD: changeme
+      JWT_SECRET: change-this-secret-in-prod
+      SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-java
+
+volumes:
+  db-data:
+version: '3.8'
+
+services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
