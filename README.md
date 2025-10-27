@@ -14,14 +14,11 @@ A comprehensive robotics platform for custom robot building, device management, 
 - **Real-time Monitoring**: Live device status and performance tracking
 
 ### Technical Features
-- **Modern Frontend**: React 18 + TypeScript + Vite
-- **Professional Backend**: Node.js + Express + TypeScript
-- **Database**: PostgreSQL with Prisma ORM
-- **Real-time Communication**: WebSocket integration
+- **Modern Frontend**: React 18 + TypeScript + Vite + Tailwind CSS
+- **Professional Backend**: Spring Boot + Java 17 + JPA/Hibernate
+- **Database**: H2 (development) / PostgreSQL (production)
 - **Authentication**: JWT-based secure authentication
-- **Payment Processing**: Stripe integration
-- **File Upload**: Cloudinary integration
-- **Email Notifications**: Automated email system
+- **API Design**: RESTful APIs with proper error handling
 - **Testing**: Comprehensive test suite with Vitest
 - **Code Quality**: ESLint + Prettier + TypeScript strict mode
 
@@ -38,153 +35,17 @@ A comprehensive robotics platform for custom robot building, device management, 
 - **React Hook Form** - Form handling
 - **Zod** - Schema validation
 - **Sonner** - Toast notifications
+- **Framer Motion** - Smooth animations
 
 ### Backend
-- **Node.js** - JavaScript runtime
-- **Express** - Web framework
-- **TypeScript** - Type-safe development
-- **Prisma** - Database ORM
-- **PostgreSQL** - Relational database
-- **JWT** - Authentication
-- **Socket.IO** - Real-time communication
-- **Stripe** - Payment processing
-- **Nodemailer** - Email service
-- **Multer** - File upload handling
-
-### Development Tools
-- **Vitest** - Testing framework
-- **ESLint** - Code linting
-- **Prettier** - Code formatting
-- **Docker** - Containerization
-- **Git** - Version control
-
-## 📦 Installation
-
-### Prerequisites
-- Node.js 18+ 
-- PostgreSQL 14+
-- npm or yarn
-
-### Frontend Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/customo-robotics-hub.git
-   cd customo-robotics-hub
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Environment setup**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-4. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-### Backend Setup
-
-1. **Navigate to backend directory**
-   ```bash
-   cd backend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Environment setup**
-   ```bash
-   cp env.example .env
-   # Edit .env with your database and service configurations
-   ```
-
-4. **Database setup**
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   npx prisma db seed
-   ```
-
-5. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-## 🎯 One-click start
-
-To make development easier we provide two "one-click" starters:
-
-- Windows PowerShell (opens two new PowerShell windows):
-
-```powershell
-npm run start:oneclick
-# or
-powershell -ExecutionPolicy Bypass -File ./scripts/start-all.ps1
-```
-
-- Cross-platform (runs both servers in a single terminal; works on macOS/Linux/Windows with Node):
-
-```bash
-npm run start:oneclick:cross
-# or
-node ./scripts/start-all.js
-```
-
-What these do:
-- Ensure root dependencies are installed (skips if node_modules exists).
-- Run `npx prisma generate` for the backend.
-- Start the backend and frontend dev servers.
-
-Troubleshooting:
-- If PowerShell blocks scripts, run with `-ExecutionPolicy Bypass` as shown above.
-- Make sure `JWT_SECRET` and `DATABASE_URL` are set in your `.env` files (copy from `env.example`).
-- If ports are in use, the backend or frontend may switch ports; check the logs in their terminals.
-
-
-## 🚀 Quick Start
-
-### Using Docker (Recommended)
-
-1. **Start with Docker Compose**
-   ```bash
-   docker-compose up -d --build
-   ```
-
-2. **Access the application**
-   - Frontend: http://localhost:8080
-   - Frontend (nginx): http://localhost
-   - Backend API: http://localhost:8080
-  
-Notes:
-- Development: use `.env.development` to point frontend to `http://localhost:8080/api`.
-- Production-compose uses service hostnames; `.env.production` sets `VITE_API_URL=http://backend-java:8080/api` for the frontend build.
-   - Database: localhost:5432
-
-### Manual Setup
-
-1. **Start the backend**
-   ```bash
-   cd backend
-   npm run dev
-   ```
-
-2. **Start the frontend** (in a new terminal)
-   ```bash
-   npm run dev
-   ```
-
-3. **Access the application**
-   - Frontend: http://localhost:8080
-   - Backend API: http://localhost:5000
+- **Spring Boot 3.2.5** - Java web framework
+- **Java 17** - Modern Java features
+- **Spring Data JPA** - Data persistence
+- **Hibernate** - ORM framework
+- **Spring Security** - Authentication & authorization
+- **JWT** - Token-based authentication
+- **H2 Database** - In-memory database (dev)
+- **Maven** - Build tool
 
 ## 📁 Project Structure
 
@@ -196,21 +57,84 @@ customo-robotics-hub/
 │   │   ├── ErrorBoundary.tsx   # Error handling
 │   │   ├── LoadingSpinner.tsx  # Loading states
 │   │   └── NotificationProvider.tsx # Notifications
+│   ├── contexts/               # React contexts
+│   │   ├── AuthContext.tsx     # Authentication context
+│   │   └── CartContext.tsx     # Shopping cart context
+│   ├── services/               # API services
+│   │   └── api.ts              # Main API client
 │   ├── hooks/                  # Custom React hooks
 │   ├── lib/                    # Utilities and API client
 │   ├── pages/                  # Page components
 │   └── test/                   # Test files
-├── backend/                     # Backend source code
-│   ├── src/                    # Backend source
-│   │   ├── middleware/         # Express middleware
-│   │   ├── routes/             # API routes
-│   │   └── services/           # Business logic
-│   ├── prisma/                 # Database schema and migrations
-│   └── Dockerfile              # Backend containerization
-├── public/                      # Static assets
+├── backend-java/               # Backend source code
+│   ├── src/main/java/com/customo/backend/
+│   │   ├── controller/         # REST controllers
+│   │   ├── service/           # Business logic
+│   │   ├── repository/        # Data access layer
+│   │   ├── entity/           # JPA entities
+│   │   ├── dto/              # Data transfer objects
+│   │   ├── config/           # Configuration classes
+│   │   └── util/             # Utility classes
+│   ├── src/main/resources/
+│   │   └── application.properties
+│   └── pom.xml               # Maven configuration
+├── public/                     # Static assets
 ├── docs/                       # Documentation
 └── tests/                      # Test files
 ```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Node.js** 18+ and npm
+- **Java** 17+
+- **Maven** 3.6+
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd customo-robotics-hub
+   ```
+
+2. **Install frontend dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. **Start the backend**
+   ```bash
+   cd backend-java
+   mvn spring-boot:run
+   ```
+
+5. **Start the frontend** (in a new terminal)
+   ```bash
+   npm run dev
+   ```
+
+6. **Access the application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8080/api
+   - H2 Console: http://localhost:8080/h2-console
+
+### Using Docker (Alternative)
+
+1. **Start with Docker Compose**
+   ```bash
+   docker-compose up -d --build
+   ```
+
+2. **Access the application**
+   - Frontend: http://localhost:8080
+   - Backend API: http://localhost:8080/api
 
 ## 🔧 Configuration
 
@@ -218,21 +142,25 @@ customo-robotics-hub/
 
 #### Frontend (.env)
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:8080/api
 VITE_APP_NAME=Customo RoBo
 VITE_APP_VERSION=1.0.0
 VITE_ENABLE_ANALYTICS=false
-VITE_ENABLE_DEBUG_MODE=false
+VITE_ENABLE_DEBUG_MODE=true
 ```
 
-#### Backend (.env)
-```env
-DATABASE_URL="postgresql://username:password@localhost:5432/customo_db"
-JWT_SECRET="your-super-secret-jwt-key"
-JWT_EXPIRES_IN="7d"
-PORT=5000
-NODE_ENV="development"
-FRONTEND_URL="http://localhost:8080"
+#### Backend (application.properties)
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:h2:mem:customo;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+
+# JWT Configuration
+jwt.secret=your-super-secret-jwt-key-change-in-production
+jwt.expiration=604800000
+
+# Server Configuration
+server.port=8080
 ```
 
 ## 🧪 Testing
@@ -243,8 +171,8 @@ FRONTEND_URL="http://localhost:8080"
 npm run test
 
 # Backend tests
-cd backend
-npm run test
+cd backend-java
+mvn test
 
 # Test coverage
 npm run test:coverage
@@ -265,48 +193,67 @@ npm run test:coverage
 - `PUT /api/auth/change-password` - Change password
 
 ### Product Endpoints
-- `GET /api/products` - Get all products
-- `GET /api/products/:id` - Get product by ID
-- `POST /api/products/:id/reviews` - Add product review
-- `GET /api/products/:id/reviews` - Get product reviews
+- `GET /api/products` - Get all products (with pagination, search, filters)
+- `GET /api/products/{id}` - Get product by ID
+- `GET /api/products/categories` - Get product categories
+- `GET /api/products/brands` - Get product brands
+- `POST /api/products` - Create product (admin)
+- `PUT /api/products/{id}` - Update product (admin)
+- `DELETE /api/products/{id}` - Delete product (admin)
+
+### Cart Endpoints
+- `GET /api/cart` - Get cart items
+- `POST /api/cart` - Add item to cart
+- `PUT /api/cart/{id}` - Update cart item quantity
+- `DELETE /api/cart/{id}` - Remove item from cart
+- `DELETE /api/cart` - Clear entire cart
 
 ### Device Endpoints
 - `GET /api/devices` - Get user devices
-- `GET /api/devices/:id` - Get device by ID
+- `GET /api/devices/{id}` - Get device by ID
 - `POST /api/devices` - Add new device
-- `PUT /api/devices/:id` - Update device
-- `DELETE /api/devices/:id` - Delete device
-- `POST /api/devices/:id/control` - Control device
+- `PUT /api/devices/{id}` - Update device
 
-### Service Endpoints
-- `GET /api/service/tickets` - Get service tickets
-- `POST /api/service/tickets` - Create service ticket
-- `PUT /api/service/tickets/:id` - Update ticket
-- `GET /api/service/stats` - Get service statistics
+### Health Check
+- `GET /api/health` - Health check endpoint
+
+## 🔒 Security Features
+
+- **JWT Authentication**: Secure token-based authentication
+- **Password Hashing**: BCrypt password encryption
+- **CORS Configuration**: Proper cross-origin resource sharing
+- **Input Validation**: Server-side validation with Hibernate Validator
+- **SQL Injection Protection**: JPA/Hibernate parameterized queries
+- **XSS Protection**: Input sanitization and output encoding
 
 ## 🚀 Deployment
 
-### Production Build
+### Frontend Deployment
 ```bash
-# Frontend
+# Build for production
 npm run build
 
-# Backend
-cd backend
-npm run build
+# Deploy dist/ folder to your hosting service
+# (Vercel, Netlify, GitHub Pages, etc.)
 ```
 
-### Docker Deployment
+### Backend Deployment
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+# Build JAR file
+cd backend-java
+mvn clean package
+
+# Run JAR file
+java -jar target/backend-java-0.0.1-SNAPSHOT.jar
 ```
 
-### Environment Setup
-1. Configure production environment variables
-2. Set up PostgreSQL database
-3. Configure reverse proxy (Nginx)
-4. Set up SSL certificates
-5. Configure monitoring and logging
+### Production Considerations
+- Use PostgreSQL instead of H2
+- Set secure JWT secret
+- Configure proper CORS origins
+- Enable HTTPS
+- Set up monitoring and logging
+- Use environment variables for secrets
 
 ## 🤝 Contributing
 
@@ -316,46 +263,41 @@ docker-compose -f docker-compose.prod.yml up -d
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Development Guidelines
-- Follow TypeScript strict mode
-- Write comprehensive tests
-- Use conventional commit messages
-- Follow the existing code style
-- Update documentation as needed
-
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
-- **Documentation**: [Project Wiki](https://github.com/your-username/customo-robotics-hub/wiki)
-- **Issues**: [GitHub Issues](https://github.com/your-username/customo-robotics-hub/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/customo-robotics-hub/discussions)
-- **Email**: support@customorobo.com
+If you encounter any issues or have questions:
+
+1. Check the [Issues](https://github.com/your-repo/issues) page
+2. Create a new issue with detailed information
+3. Contact the development team
 
 ## 🎯 Roadmap
 
-### Version 1.1
-- [ ] Advanced analytics dashboard
-- [ ] Mobile app (React Native)
-- [ ] AI-powered recommendations
-- [ ] Advanced device automation
+### Phase 1 (Current)
+- ✅ Basic authentication system
+- ✅ Product catalog
+- ✅ Shopping cart functionality
+- ✅ Device management
+- ✅ Responsive UI
 
-### Version 1.2
-- [ ] Multi-tenant architecture
-- [ ] Advanced reporting
-- [ ] Third-party integrations
-- [ ] Performance optimizations
+### Phase 2 (Next)
+- 🔄 Order management system
+- 🔄 Payment integration (Stripe)
+- 🔄 Real-time notifications
+- 🔄 Advanced device monitoring
+- 🔄 Admin dashboard
 
-## 🙏 Acknowledgments
-
-- React team for the amazing framework
-- Vite team for the fast build tool
-- Tailwind CSS for the utility-first approach
-- Radix UI for accessible components
-- All contributors and supporters
+### Phase 3 (Future)
+- 📋 Machine learning integration
+- 📋 IoT device connectivity
+- 📋 Advanced analytics
+- 📋 Mobile app
+- 📋 Multi-tenant support
 
 ---
 
-**Built with ❤️ by the Customo RoBo Team**
+**Built with ❤️ by the Customo Team**

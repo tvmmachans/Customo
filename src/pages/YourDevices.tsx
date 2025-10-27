@@ -2,11 +2,16 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '@/lib/api';
+import apiClient from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Bot, 
   Battery, 
@@ -17,75 +22,141 @@ import {
   RotateCcw,
   AlertTriangle,
   CheckCircle,
-  Clock
+  Clock,
+  Plus,
+  Search,
+  Filter
 } from "lucide-react";
+
+interface Device {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  battery: number;
+  location?: string;
+  tasks?: string;
+  isOnline: boolean;
+  lastSeen: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const YourDevices = () => {
   const navigate = useNavigate();
-  const [devices, setDevices] = useState<any[]>([]);
+  const { isAuthenticated, user } = useAuth();
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [showAddDevice, setShowAddDevice] = useState(false);
+  const [newDevice, setNewDevice] = useState({
+    name: "",
+    type: "",
+    location: "",
+    tasks: ""
+  });
 
-  // Load devices from backend on mount (fallback to demo list on error)
+  // Redirect if not authenticated
   useEffect(() => {
-    let mounted = true;
-    apiClient.getDevices()
-      .then((res: any) => {
-        // backend returns { devices: Collection }
-        const list = res?.devices || res?.data?.devices || [];
-        if (mounted) setDevices(Array.isArray(list) ? list : Array.from(list));
-      })
-      .catch(() => {
-        // fallback demo devices if backend not available
-        if (!mounted) return;
-        setDevices([
-          {
-            id: 1,
-            name: "Guardian Security Bot X1",
-            type: "Security",
-            status: "active",
-            battery: 85,
-            location: "Warehouse A - Zone 1",
-            lastSeen: "2 minutes ago",
-            isOnline: true,
-            tasks: "Perimeter patrol active",
-            loadingAction: null,
-          },
-          {
-            id: 2,
-            name: "HomePal Assistant Pro",
-            type: "Assistant",
-            status: "idle",
-            battery: 92,
-            location: "Living Room",
-            lastSeen: "5 minutes ago",
-            isOnline: true,
-            tasks: "Standby mode",
-            loadingAction: null,
-          },
-          {
-            id: 3,
-            name: "IndustriMax Welder 3000",
-            type: "Industrial",
-            status: "maintenance",
-            battery: 45,
-            location: "Factory Floor B",
-            lastSeen: "1 hour ago",
-            isOnline: false,
-            tasks: "Scheduled maintenance",
-            loadingAction: null,
-          },
-        ]);
-      });
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+  }, [isAuthenticated, navigate]);
 
-    return () => { mounted = false; };
-  }, []);
+  // Load devices from backend
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadDevices();
+    }
+  }, [isAuthenticated]);
+
+  const loadDevices = async () => {
+    try {
+      setLoading(true);
+      const params: any = {};
+      if (searchTerm) params.search = searchTerm;
+      if (statusFilter) params.status = statusFilter;
+      
+      const response = await apiClient.getDevices(params);
+      setDevices(response.devices);
+    } catch (error) {
+      console.error('Failed to load devices:', error);
+      toast.error('Failed to load devices');
+      // Fallback to empty array
+      setDevices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    loadDevices();
+  };
+
+  const handleAddDevice = async () => {
+    try {
+      if (!newDevice.name || !newDevice.type) {
+        toast.error('Name and type are required');
+        return;
+      }
+
+      const device = await apiClient.createDevice(newDevice);
+      setDevices(prev => [device, ...prev]);
+      setNewDevice({ name: "", type: "", location: "", tasks: "" });
+      setShowAddDevice(false);
+      toast.success('Device added successfully');
+    } catch (error) {
+      console.error('Failed to add device:', error);
+      toast.error('Failed to add device');
+    }
+  };
+
+  const handleUpdateStatus = async (deviceId: string, status: string) => {
+    try {
+      const updatedDevice = await apiClient.updateDeviceStatus(deviceId, status);
+      setDevices(prev => prev.map(d => d.id === deviceId ? updatedDevice : d));
+      toast.success('Device status updated');
+    } catch (error) {
+      console.error('Failed to update device status:', error);
+      toast.error('Failed to update device status');
+    }
+  };
+
+  const handleUpdateBattery = async (deviceId: string, battery: number) => {
+    try {
+      const updatedDevice = await apiClient.updateDeviceBattery(deviceId, battery);
+      setDevices(prev => prev.map(d => d.id === deviceId ? updatedDevice : d));
+      toast.success('Device battery updated');
+    } catch (error) {
+      console.error('Failed to update device battery:', error);
+      toast.error('Failed to update device battery');
+    }
+  };
+
+  const handleDeleteDevice = async (deviceId: string) => {
+    try {
+      await apiClient.deleteDevice(deviceId);
+      setDevices(prev => prev.filter(d => d.id !== deviceId));
+      toast.success('Device deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete device:', error);
+      toast.error('Failed to delete device');
+    }
+  };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "active":
         return "bg-green-500";
       case "idle":
-        return "bg-yellow-500";
+        return "bg-blue-500";
       case "maintenance":
+        return "bg-yellow-500";
+      case "offline":
+        return "bg-gray-500";
+      case "error":
         return "bg-red-500";
       default:
         return "bg-muted";
@@ -93,265 +164,275 @@ const YourDevices = () => {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "active":
-        return <CheckCircle className="h-4 w-4" />;
+        return <Play className="h-4 w-4" />;
       case "idle":
-        return <Clock className="h-4 w-4" />;
+        return <Pause className="h-4 w-4" />;
       case "maintenance":
+        return <Settings className="h-4 w-4" />;
+      case "offline":
+        return <AlertTriangle className="h-4 w-4" />;
+      case "error":
         return <AlertTriangle className="h-4 w-4" />;
       default:
-        return <Bot className="h-4 w-4" />;
+        return <Clock className="h-4 w-4" />;
     }
   };
 
-  const handleDeviceControl = async (deviceId: number, action: string) => {
-    // optimistic: show loading and apply a temporary status change for immediate feedback
-    const optimisticMap: Record<string, string | undefined> = {
-      start: 'active',
-      pause: 'idle',
-      reset: undefined,
-      toggle_power: undefined,
-    };
-
-    let prevDevice: any;
-    setDevices(prev => prev.map(d => {
-      if (d.id === deviceId) {
-        prevDevice = d;
-        return { ...d, loadingAction: action, status: optimisticMap[action] ?? d.status };
-      }
-      return d;
-    }));
-
-    try {
-      const res: any = await apiClient.controlDevice(String(deviceId), action);
-      // backend returns { device: { ... } }
-      const payload = res?.device || res?.data?.device || res;
-      if (!payload) {
-        toast.error('No response from server');
-        // revert optimistic
-        setDevices(prev => prev.map(d => d.id === deviceId ? { ...prevDevice, loadingAction: null } : d));
-        return;
-      }
-
-      // merge payload from server (if provided) or clear loading state
-      setDevices(prev => prev.map(d => d.id === deviceId ? { ...d, ...payload, loadingAction: null } : d));
-      toast.success(`Action ${action} sent to device`);
-    } catch (err: any) {
-      const message = err?.message || 'Failed to control device';
-      toast.error(message);
-      // revert optimistic change
-      setDevices(prev => prev.map(d => d.id === deviceId ? { ...prevDevice, loadingAction: null } : d));
-    }
+  const formatLastSeen = (lastSeen: string) => {
+    const date = new Date(lastSeen);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} days ago`;
   };
+
+  if (!isAuthenticated) {
+    return null; // Will redirect to login
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] pt-24 pb-12 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your devices...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen pt-20">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-[calc(100vh-4rem)] pt-24 pb-12 bg-background">
+      <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Your Devices</h1>
-              <p className="text-muted-foreground">
-                Monitor and control your robot fleet from this central dashboard
-              </p>
+          <h1 className="text-4xl font-bold mb-2">Your Devices</h1>
+          <p className="text-muted-foreground">
+            Manage and monitor your robotic devices
+          </p>
+        </div>
+
+        {/* Controls */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search devices..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => { window.location.reload(); }}>
-                Refresh
-              </Button>
-              <Button variant="cta" size="sm" onClick={() => navigate('/custom-build')}>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="idle">Idle</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+                <SelectItem value="offline">Offline</SelectItem>
+                <SelectItem value="error">Error</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={handleSearch} variant="outline">
+              <Filter className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+          </div>
+          
+          <Dialog open={showAddDevice} onOpenChange={setShowAddDevice}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
                 Add Device
               </Button>
-            </div>
-          </div>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Device</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Device Name *</Label>
+                  <Input
+                    id="name"
+                    value={newDevice.name}
+                    onChange={(e) => setNewDevice(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter device name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="type">Device Type *</Label>
+                  <Select value={newDevice.type} onValueChange={(value) => setNewDevice(prev => ({ ...prev, type: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select device type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Security">Security</SelectItem>
+                      <SelectItem value="Assistant">Assistant</SelectItem>
+                      <SelectItem value="Industrial">Industrial</SelectItem>
+                      <SelectItem value="Service">Service</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={newDevice.location}
+                    onChange={(e) => setNewDevice(prev => ({ ...prev, location: e.target.value }))}
+                    placeholder="Enter device location"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="tasks">Tasks</Label>
+                  <Input
+                    id="tasks"
+                    value={newDevice.tasks}
+                    onChange={(e) => setNewDevice(prev => ({ ...prev, tasks: e.target.value }))}
+                    placeholder="Enter current tasks"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setShowAddDevice(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddDevice}>
+                    Add Device
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
-        {/* Device Stats */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Devices</p>
-                  <p className="text-2xl font-bold">{devices.length}</p>
-                </div>
-                <Bot className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Active</p>
-                  <p className="text-2xl font-bold text-green-500">
-                    {devices.filter(d => d.status === "active").length}
-                  </p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Online</p>
-                  <p className="text-2xl font-bold text-primary">
-                    {devices.filter(d => d.isOnline).length}
-                  </p>
-                </div>
-                <Wifi className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Maintenance</p>
-                  <p className="text-2xl font-bold text-yellow-500">
-                    {devices.filter(d => d.status === "maintenance").length}
-                  </p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Devices List */}
-        <div className="space-y-6">
-          {devices.map((device) => (
-            <Card key={device.id} className="hover:glow-primary transition-all duration-300">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center">
-                      <Bot className="h-6 w-6 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">{device.name}</CardTitle>
-                      <p className="text-muted-foreground">{device.type} Robot</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(device.status)} variant="secondary">
-                      {getStatusIcon(device.status)}
-                      <span className="ml-1 capitalize">{device.status}</span>
-                    </Badge>
-                    {device.isOnline && (
-                      <Badge variant="outline" className="text-green-500 border-green-500">
-                        <Wifi className="mr-1 h-3 w-3" />
-                        Online
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-6">
-                  {/* Device Info */}
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Location</p>
-                      <p className="font-medium">{device.location}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Last Seen</p>
-                      <p className="font-medium">{device.lastSeen}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Current Task</p>
-                      <p className="font-medium">{device.tasks}</p>
-                    </div>
-                  </div>
-
-                  {/* Battery & Status */}
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm text-muted-foreground">Battery Level</p>
-                        <span className="text-sm font-medium">{device.battery}%</span>
-                      </div>
-                      <Progress value={device.battery} className="h-2" />
-                    </div>
-                    
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">Power Status</p>
-                        <Switch 
-                          checked={device.status === "active"}
-                          onCheckedChange={() => handleDeviceControl(device.id, "toggle_power")}
-                          disabled={!!device.loadingAction}
-                        />
-                      </div>
-                  </div>
-
-                  {/* Controls */}
-                  <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">Device Controls</p>
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant={device.status === 'active' ? 'ghost' : 'default'}
-                        size="sm"
-                        onClick={() => handleDeviceControl(device.id, 'start')}
-                        disabled={device.status === 'maintenance' || !!device.loadingAction}
-                        aria-label={`Start ${device.name}`}
-                      >
-                        <Play className={`mr-2 h-4 w-4 ${device.loadingAction === 'start' ? 'animate-spin' : ''}`} />
-                        {device.loadingAction === 'start' ? 'Starting...' : 'Start'}
-                      </Button>
-
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleDeviceControl(device.id, 'pause')}
-                        disabled={device.status !== 'active' || !!device.loadingAction}
-                        aria-label={`Pause ${device.name}`}
-                      >
-                        <Pause className={`mr-2 h-4 w-4 ${device.loadingAction === 'pause' ? 'animate-spin' : ''}`} />
-                        {device.loadingAction === 'pause' ? 'Pausing...' : 'Pause'}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeviceControl(device.id, "reset")}
-                        disabled={!!device.loadingAction}
-                      >
-                        <RotateCcw className={`mr-2 h-3 w-3 ${device.loadingAction === 'reset' ? 'animate-spin' : ''}`} />
-                        {device.loadingAction === 'reset' ? 'Resetting...' : 'Reset'}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeviceControl(device.id, "settings")}
-                        disabled={!!device.loadingAction}
-                      >
-                        <Settings className="mr-2 h-3 w-3" />
-                        Settings
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {devices.length === 0 && (
+        {/* Devices Grid */}
+        {devices.length === 0 ? (
           <div className="text-center py-12">
-            <Bot className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Devices Found</h3>
-            <p className="text-muted-foreground mb-6">
-              You haven't added any robots to your fleet yet.
+            <Bot className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No devices found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm || statusFilter 
+                ? "Try adjusting your search or filter criteria" 
+                : "Add your first device to get started"}
             </p>
-            <Button variant="cta" onClick={() => navigate('/custom-build')}>Add Your First Device</Button>
+            {!searchTerm && !statusFilter && (
+              <Button onClick={() => setShowAddDevice(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Device
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {devices.map((device) => (
+              <Card key={device.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Bot className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{device.name}</CardTitle>
+                        <p className="text-sm text-muted-foreground">{device.type}</p>
+                      </div>
+                    </div>
+                    <Badge className={`${getStatusColor(device.status)} text-white`}>
+                      <div className="flex items-center space-x-1">
+                        {getStatusIcon(device.status)}
+                        <span className="capitalize">{device.status}</span>
+                      </div>
+                    </Badge>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  {/* Battery */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center space-x-1">
+                        <Battery className="h-4 w-4" />
+                        <span>Battery</span>
+                      </span>
+                      <span>{device.battery}%</span>
+                    </div>
+                    <Progress value={device.battery} className="h-2" />
+                  </div>
+
+                  {/* Connection Status */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center space-x-1">
+                      <Wifi className={`h-4 w-4 ${device.isOnline ? 'text-green-500' : 'text-red-500'}`} />
+                      <span>Connection</span>
+                    </span>
+                    <span className={device.isOnline ? 'text-green-500' : 'text-red-500'}>
+                      {device.isOnline ? 'Online' : 'Offline'}
+                    </span>
+                  </div>
+
+                  {/* Location */}
+                  {device.location && (
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium">Location:</span> {device.location}
+                    </div>
+                  )}
+
+                  {/* Tasks */}
+                  {device.tasks && (
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium">Tasks:</span> {device.tasks}
+                    </div>
+                  )}
+
+                  {/* Last Seen */}
+                  <div className="text-sm text-muted-foreground">
+                    <span className="font-medium">Last seen:</span> {formatLastSeen(device.lastSeen)}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex space-x-2 pt-2">
+                    <Select 
+                      value={device.status} 
+                      onValueChange={(value) => handleUpdateStatus(device.id, value)}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="idle">Idle</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="offline">Offline</SelectItem>
+                        <SelectItem value="error">Error</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteDevice(device.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </div>

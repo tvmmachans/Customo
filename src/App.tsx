@@ -9,6 +9,7 @@ import NotificationProvider from "./components/NotificationProvider";
 import Navigation from "./components/Navigation";
 import ScrollToTop from "./components/ScrollToTop";
 import { CartProvider } from "./contexts/CartContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -64,10 +65,11 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <ScrollToTop />
-              <CartProvider>
-                <div className="min-h-screen bg-background">
-                  <Navigation />
-                  <Routes>
+              <AuthProvider>
+                <CartProvider>
+                  <div className="min-h-screen bg-background">
+                    <Navigation />
+                    <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/shop" element={<Shop />} />
                   <Route path="/product/:id" element={<ProductDetail />} />
@@ -87,9 +89,10 @@ const App = () => (
                   <Route path="/buttons" element={<Buttons />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </div>
-              </CartProvider>
+                    </Routes>
+                  </div>
+                </CartProvider>
+              </AuthProvider>
             </BrowserRouter>
           </NotificationProvider>
         </TooltipProvider>
