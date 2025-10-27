@@ -1,0 +1,97 @@
+# Docker ignore file for Customo RoBo Platform
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Test files
+**/__tests__/
+**/*.test.*
+**/*.spec.*
+**/test/
+**/tests/
+coverage/
+.nyc_output/
+
+# Maven build artifacts
+backend-java/target/
+backend-java/logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Development files
+simple-test.cjs
+test-backend.cjs
+compile-java.bat
+setup-java-db.ps1
+
+# Archive files
+archive/
+old-java/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+customo-clean.db
+
+# Java specific
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# IDE specific
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
