@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.customo.backend.AuthIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.981 s -- in com.customo.backend.AuthIntegrationTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.262 s -- in com.customo.backend.AuthIntegrationTest
