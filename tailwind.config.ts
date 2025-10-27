@@ -111,6 +111,10 @@ export default {
       backgroundImage: {
         'gradient-primary': 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)))',
         'gradient-accent': 'linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)))',
+        'grid-white': 'linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)',
+      },
+      backgroundSize: {
+        'grid': '50px 50px',
       },
     },
   },

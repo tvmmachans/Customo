@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -20,41 +22,62 @@ import {
 
 const YourDevices = () => {
   const navigate = useNavigate();
-  const [devices, setDevices] = useState([
-    {
-      id: 1,
-      name: "Guardian Security Bot X1",
-      type: "Security",
-      status: "active",
-      battery: 85,
-      location: "Warehouse A - Zone 1",
-      lastSeen: "2 minutes ago",
-      isOnline: true,
-      tasks: "Perimeter patrol active",
-    },
-    {
-      id: 2,
-      name: "HomePal Assistant Pro",
-      type: "Assistant", 
-      status: "idle",
-      battery: 92,
-      location: "Living Room",
-      lastSeen: "5 minutes ago",
-      isOnline: true,
-      tasks: "Standby mode",
-    },
-    {
-      id: 3,
-      name: "IndustriMax Welder 3000",
-      type: "Industrial",
-      status: "maintenance",
-      battery: 45,
-      location: "Factory Floor B",
-      lastSeen: "1 hour ago",
-      isOnline: false,
-      tasks: "Scheduled maintenance",
-    },
-  ]);
+  const [devices, setDevices] = useState<any[]>([]);
+
+  // Load devices from backend on mount (fallback to demo list on error)
+  useEffect(() => {
+    let mounted = true;
+    apiClient.getDevices()
+      .then((res: any) => {
+        // backend returns { devices: Collection }
+        const list = res?.devices || res?.data?.devices || [];
+        if (mounted) setDevices(Array.isArray(list) ? list : Array.from(list));
+      })
+      .catch(() => {
+        // fallback demo devices if backend not available
+        if (!mounted) return;
+        setDevices([
+          {
+            id: 1,
+            name: "Guardian Security Bot X1",
+            type: "Security",
+            status: "active",
+            battery: 85,
+            location: "Warehouse A - Zone 1",
+            lastSeen: "2 minutes ago",
+            isOnline: true,
+            tasks: "Perimeter patrol active",
+            loadingAction: null,
+          },
+          {
+            id: 2,
+            name: "HomePal Assistant Pro",
+            type: "Assistant",
+            status: "idle",
+            battery: 92,
+            location: "Living Room",
+            lastSeen: "5 minutes ago",
+            isOnline: true,
+            tasks: "Standby mode",
+            loadingAction: null,
+          },
+          {
+            id: 3,
+            name: "IndustriMax Welder 3000",
+            type: "Industrial",
+            status: "maintenance",
+            battery: 45,
+            location: "Factory Floor B",
+            lastSeen: "1 hour ago",
+            isOnline: false,
+            tasks: "Scheduled maintenance",
+            loadingAction: null,
+          },
+        ]);
+      });
+
+    return () => { mounted = false; };
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -82,9 +105,44 @@ const YourDevices = () => {
     }
   };
 
-  const handleDeviceControl = (deviceId: number, action: string) => {
-    console.log(`Device ${deviceId}: ${action}`);
-    // This will be connected to Supabase for real device control
+  const handleDeviceControl = async (deviceId: number, action: string) => {
+    // optimistic: show loading and apply a temporary status change for immediate feedback
+    const optimisticMap: Record<string, string | undefined> = {
+      start: 'active',
+      pause: 'idle',
+      reset: undefined,
+      toggle_power: undefined,
+    };
+
+    let prevDevice: any;
+    setDevices(prev => prev.map(d => {
+      if (d.id === deviceId) {
+        prevDevice = d;
+        return { ...d, loadingAction: action, status: optimisticMap[action] ?? d.status };
+      }
+      return d;
+    }));
+
+    try {
+      const res: any = await apiClient.controlDevice(String(deviceId), action);
+      // backend returns { device: { ... } }
+      const payload = res?.device || res?.data?.device || res;
+      if (!payload) {
+        toast.error('No response from server');
+        // revert optimistic
+        setDevices(prev => prev.map(d => d.id === deviceId ? { ...prevDevice, loadingAction: null } : d));
+        return;
+      }
+
+      // merge payload from server (if provided) or clear loading state
+      setDevices(prev => prev.map(d => d.id === deviceId ? { ...d, ...payload, loadingAction: null } : d));
+      toast.success(`Action ${action} sent to device`);
+    } catch (err: any) {
+      const message = err?.message || 'Failed to control device';
+      toast.error(message);
+      // revert optimistic change
+      setDevices(prev => prev.map(d => d.id === deviceId ? { ...prevDevice, loadingAction: null } : d));
+    }
   };
 
   return (
@@ -92,10 +150,22 @@ const YourDevices = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Your Devices</h1>
-          <p className="text-muted-foreground">
-            Monitor and control your robot fleet from this central dashboard
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Your Devices</h1>
+              <p className="text-muted-foreground">
+                Monitor and control your robot fleet from this central dashboard
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" onClick={() => { window.location.reload(); }}>
+                Refresh
+              </Button>
+              <Button variant="cta" size="sm" onClick={() => navigate('/custom-build')}>
+                Add Device
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Device Stats */}
@@ -213,49 +283,55 @@ const YourDevices = () => {
                       <Progress value={device.battery} className="h-2" />
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">Power Status</p>
-                      <Switch 
-                        checked={device.status === "active"}
-                        onCheckedChange={() => handleDeviceControl(device.id, "toggle_power")}
-                      />
-                    </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">Power Status</p>
+                        <Switch 
+                          checked={device.status === "active"}
+                          onCheckedChange={() => handleDeviceControl(device.id, "toggle_power")}
+                          disabled={!!device.loadingAction}
+                        />
+                      </div>
                   </div>
 
                   {/* Controls */}
                   <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">Device Controls</p>
                     <div className="flex flex-wrap gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant={device.status === 'active' ? 'ghost' : 'default'}
                         size="sm"
-                        onClick={() => handleDeviceControl(device.id, "start")}
-                        disabled={device.status === "maintenance"}
+                        onClick={() => handleDeviceControl(device.id, 'start')}
+                        disabled={device.status === 'maintenance' || !!device.loadingAction}
+                        aria-label={`Start ${device.name}`}
                       >
-                        <Play className="mr-2 h-3 w-3" />
-                        Start
+                        <Play className={`mr-2 h-4 w-4 ${device.loadingAction === 'start' ? 'animate-spin' : ''}`} />
+                        {device.loadingAction === 'start' ? 'Starting...' : 'Start'}
                       </Button>
-                      <Button 
-                        variant="outline" 
+
+                      <Button
+                        variant="secondary"
                         size="sm"
-                        onClick={() => handleDeviceControl(device.id, "pause")}
-                        disabled={device.status !== "active"}
+                        onClick={() => handleDeviceControl(device.id, 'pause')}
+                        disabled={device.status !== 'active' || !!device.loadingAction}
+                        aria-label={`Pause ${device.name}`}
                       >
-                        <Pause className="mr-2 h-3 w-3" />
-                        Pause
+                        <Pause className={`mr-2 h-4 w-4 ${device.loadingAction === 'pause' ? 'animate-spin' : ''}`} />
+                        {device.loadingAction === 'pause' ? 'Pausing...' : 'Pause'}
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => handleDeviceControl(device.id, "reset")}
+                        disabled={!!device.loadingAction}
                       >
-                        <RotateCcw className="mr-2 h-3 w-3" />
-                        Reset
+                        <RotateCcw className={`mr-2 h-3 w-3 ${device.loadingAction === 'reset' ? 'animate-spin' : ''}`} />
+                        {device.loadingAction === 'reset' ? 'Resetting...' : 'Reset'}
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => handleDeviceControl(device.id, "settings")}
+                        disabled={!!device.loadingAction}
                       >
                         <Settings className="mr-2 h-3 w-3" />
                         Settings

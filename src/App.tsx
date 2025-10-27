@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import ErrorBoundary from "./components/ErrorBoundary";
 import NotificationProvider from "./components/NotificationProvider";
 import Navigation from "./components/Navigation";
+import ScrollToTop from "./components/ScrollToTop";
 import { CartProvider } from "./contexts/CartContext";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
@@ -62,6 +63,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ScrollToTop />
               <CartProvider>
                 <div className="min-h-screen bg-background">
                   <Navigation />
