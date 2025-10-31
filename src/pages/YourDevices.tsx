@@ -12,20 +12,22 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  Bot, 
-  Battery, 
-  Wifi, 
-  Settings, 
-  Play, 
-  Pause, 
+import { useWebSocket } from "@/hooks/use-websocket";
+import {
+  Bot,
+  Battery,
+  Wifi,
+  Settings,
+  Play,
+  Pause,
   RotateCcw,
   AlertTriangle,
   CheckCircle,
   Clock,
   Plus,
   Search,
-  Filter
+  Filter,
+  WifiOff
 } from "lucide-react";
 
 interface Device {
@@ -45,6 +47,7 @@ interface Device {
 const YourDevices = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const { isConnected, lastMessage, sendMessage, connectionStatus } = useWebSocket('/ws/devices');
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -71,6 +74,38 @@ const YourDevices = () => {
       loadDevices();
     }
   }, [isAuthenticated]);
+
+  // Handle WebSocket messages for real-time updates
+  useEffect(() => {
+    if (lastMessage) {
+      const { type, data } = lastMessage;
+      switch (type) {
+        case 'device_status_update':
+          setDevices(prev => prev.map(d =>
+            d.id === data.deviceId ? { ...d, status: data.status, lastSeen: data.lastSeen } : d
+          ));
+          break;
+        case 'device_battery_update':
+          setDevices(prev => prev.map(d =>
+            d.id === data.deviceId ? { ...d, battery: data.battery, lastSeen: data.lastSeen } : d
+          ));
+          break;
+        case 'device_online_status':
+          setDevices(prev => prev.map(d =>
+            d.id === data.deviceId ? { ...d, isOnline: data.isOnline, lastSeen: data.lastSeen } : d
+          ));
+          break;
+        case 'device_added':
+          setDevices(prev => [data.device, ...prev]);
+          break;
+        case 'device_removed':
+          setDevices(prev => prev.filter(d => d.id !== data.deviceId));
+          break;
+        default:
+          break;
+      }
+    }
+  }, [lastMessage]);
 
   const loadDevices = async () => {
     try {
@@ -214,10 +249,33 @@ const YourDevices = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Your Devices</h1>
-          <p className="text-muted-foreground">
-            Manage and monitor your robotic devices
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Your Devices</h1>
+              <p className="text-muted-foreground">
+                Manage and monitor your robotic devices
+              </p>
+            </div>
+            {/* WebSocket Connection Status */}
+            <div className="flex items-center space-x-2">
+              {connectionStatus === 'connected' ? (
+                <Wifi className="h-5 w-5 text-green-500" />
+              ) : connectionStatus === 'connecting' ? (
+                <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <WifiOff className="h-5 w-5 text-red-500" />
+              )}
+              <span className={`text-sm font-medium ${
+                connectionStatus === 'connected' ? 'text-green-500' :
+                connectionStatus === 'connecting' ? 'text-yellow-500' :
+                'text-red-500'
+              }`}>
+                {connectionStatus === 'connected' ? 'Live' :
+                 connectionStatus === 'connecting' ? 'Connecting...' :
+                 'Offline'}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Controls */}
