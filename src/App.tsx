@@ -28,7 +28,7 @@ import OrderDetail from "./pages/OrderDetail";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import Buttons from "./pages/Buttons";
-
+import { Analytics } from "@vercel/analytics/next"
 // Configure React Query with professional settings
 const queryClient = new QueryClient({
   defaultOptions: {
