@@ -19,19 +19,9 @@ if (-not (Test-Path (Join-Path $root 'node_modules'))) {
   Write-Host "Root node_modules found. Skipping install."
 }
 
-# Backend prisma generate
-Write-Host "Generating Prisma client..."
-Push-Location (Join-Path $root 'backend')
-try {
-  npx prisma generate --schema=prisma/schema.prisma
-} catch {
-  Write-Warning "prisma generate failed: $_"
-}
-Pop-Location
-
-# Start backend in new PowerShell window
+# Start backend in new PowerShell window (Spring Boot with Maven)
 Write-Host "Starting backend dev server in new window..."
-Start-Process powershell -ArgumentList "-NoExit","-Command","cd `"$(Join-Path $root 'backend')`"; npm run dev" -WindowStyle Normal
+Start-Process powershell -ArgumentList "-NoExit","-Command","cd `"$(Join-Path $root 'backend-java')`"; mvn spring-boot:run" -WindowStyle Normal
 
 # Start frontend in new PowerShell window
 Write-Host "Starting frontend dev server in new window..."

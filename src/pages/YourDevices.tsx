@@ -77,8 +77,8 @@ const YourDevices = () => {
       setLoading(true);
       const params: any = {};
       if (searchTerm) params.search = searchTerm;
-      if (statusFilter) params.status = statusFilter;
-      
+      if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+
       const response = await apiClient.getDevices(params);
       setDevices(response.devices);
     } catch (error) {
@@ -238,7 +238,7 @@ const YourDevices = () => {
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="idle">Idle</SelectItem>
                 <SelectItem value="maintenance">Maintenance</SelectItem>
@@ -405,8 +405,8 @@ const YourDevices = () => {
 
                   {/* Actions */}
                   <div className="flex space-x-2 pt-2">
-                    <Select 
-                      value={device.status} 
+                    <Select
+                      value={device.status || "active"}
                       onValueChange={(value) => handleUpdateStatus(device.id, value)}
                     >
                       <SelectTrigger className="flex-1">
