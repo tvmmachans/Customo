@@ -15,7 +15,6 @@ import { MoreVertical, MessageCircle, Phone, Info, ShoppingCart } from "lucide-r
 
 const Navigation = () => {
   const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // This will be connected to Supabase later
   const { items } = useCart();
   const { user, logout } = useAuth();
   const cartCount = items.reduce((s, i) => s + (i.quantity || 0), 0);
@@ -130,12 +129,12 @@ const Navigation = () => {
                 />
               )}
             </Link>
-            {isLoggedIn && (
+            {user && (
               <Link
                 to="/your-devices"
                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 relative ${
-                  location.pathname === "/your-devices" 
-                    ? "text-primary bg-primary/10" 
+                  location.pathname === "/your-devices"
+                    ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-primary hover:bg-accent/50"
                 }`}
               >

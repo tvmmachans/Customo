@@ -4,7 +4,7 @@ interface ApiResponse<T> {
   success: boolean;
   message?: string;
   data?: T;
-  errors?: any[];
+  errors?: string[];
 }
 
 class ApiClient {
@@ -32,10 +32,10 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    const headers: HeadersInit = {
+
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (this.token) {
